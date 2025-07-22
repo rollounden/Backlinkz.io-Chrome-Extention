@@ -28,6 +28,11 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('export-all').addEventListener('click', exportAllSeoData);
   document.getElementById('copy-business-info').addEventListener('click', copyBusinessInfo);
   document.getElementById('copy-map-code').addEventListener('click', copyMapCode);
+  document.getElementById('copy-meta-info').addEventListener('click', copyMetaInfo);
+  
+  // Set up Rich Results Test buttons
+  document.getElementById('test-schema-rich-results').addEventListener('click', testRichResults);
+  document.getElementById('test-hreflang-rich-results').addEventListener('click', testRichResults);
   
   // Set up link filter events
   document.getElementById('hide-duplicates').addEventListener('change', filterLinks);
@@ -36,34 +41,65 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('group-domains').addEventListener('change', filterLinks);
   document.getElementById('show-follow').addEventListener('change', filterLinks);
   document.getElementById('show-nofollow').addEventListener('change', filterLinks);
+  document.getElementById('link-search').addEventListener('input', filterLinks);
   document.getElementById('show-full-list').addEventListener('change', filterLinks);
+  document.getElementById('hide-navigation').addEventListener('change', filterLinks);
   
-  // Set up agency link
-  document.getElementById('agency-link').addEventListener('click', function(e) {
-    e.preventDefault();
-    chrome.tabs.create({ url: 'https://apexmarketing.co.uk/tools/' });
-  });
+  
+
   
   // Set up services link
   document.getElementById('services-link').addEventListener('click', function(e) {
     e.preventDefault();
-    chrome.tabs.create({ url: 'https://app.apexmarketing.co.uk/' });
+    chrome.tabs.create({ url: 'https://backlinkz.io/' });
   });
 
   // Set up robots.txt and sitemap.xml buttons
   document.getElementById('view-robots').addEventListener('click', function() {
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-      const url = new URL(tabs[0].url);
-      const robotsUrl = `${url.protocol}//${url.hostname}/robots.txt`;
-      chrome.tabs.create({ url: robotsUrl });
+      const activeTab = tabs[0];
+      
+      // Check if the URL is accessible
+      if (activeTab.url && (activeTab.url.startsWith('chrome://') || 
+                            activeTab.url.startsWith('chrome-extension://') || 
+                            activeTab.url.startsWith('moz-extension://') ||
+                            activeTab.url.startsWith('edge://') ||
+                            activeTab.url.startsWith('about:'))) {
+        alert('Cannot access robots.txt for this type of page. Please navigate to a regular website.');
+        return;
+      }
+      
+      try {
+        const url = new URL(activeTab.url);
+        const robotsUrl = `${url.protocol}//${url.hostname}/robots.txt`;
+        chrome.tabs.create({ url: robotsUrl });
+      } catch (e) {
+        alert('Invalid URL. Please navigate to a regular website.');
+      }
     });
   });
 
   document.getElementById('view-sitemap').addEventListener('click', function() {
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-      const url = new URL(tabs[0].url);
-      const sitemapUrl = `${url.protocol}//${url.hostname}/sitemap.xml`;
-      chrome.tabs.create({ url: sitemapUrl });
+      const activeTab = tabs[0];
+      
+      // Check if the URL is accessible
+      if (activeTab.url && (activeTab.url.startsWith('chrome://') || 
+                            activeTab.url.startsWith('chrome-extension://') || 
+                            activeTab.url.startsWith('moz-extension://') ||
+                            activeTab.url.startsWith('edge://') ||
+                            activeTab.url.startsWith('about:'))) {
+        alert('Cannot access sitemap.xml for this type of page. Please navigate to a regular website.');
+        return;
+      }
+      
+      try {
+        const url = new URL(activeTab.url);
+        const sitemapUrl = `${url.protocol}//${url.hostname}/sitemap.xml`;
+        chrome.tabs.create({ url: sitemapUrl });
+      } catch (e) {
+        alert('Invalid URL. Please navigate to a regular website.');
+      }
     });
   });
 });
@@ -71,10 +107,30 @@ document.addEventListener('DOMContentLoaded', function() {
 function analyzeCurrentPage() {
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     const activeTab = tabs[0];
+    
+    // Check if the URL is accessible (not chrome://, chrome-extension://, etc.)
+    if (activeTab.url && (activeTab.url.startsWith('chrome://') || 
+                          activeTab.url.startsWith('chrome-extension://') || 
+                          activeTab.url.startsWith('moz-extension://') ||
+                          activeTab.url.startsWith('edge://') ||
+                          activeTab.url.startsWith('about:'))) {
+      // Show error message for restricted pages
+      displayError('This extension cannot analyze Chrome internal pages or restricted URLs. Please navigate to a regular website.');
+      return;
+    }
+    
     chrome.scripting.executeScript({
       target: {tabId: activeTab.id},
       function: getPageData,
-    }, displayResults);
+    }, function(results) {
+      if (chrome.runtime.lastError) {
+        // Handle the error gracefully
+        console.log('Error executing script:', chrome.runtime.lastError.message);
+        displayError('Cannot analyze this page. Please make sure you are on a regular website and try again.');
+        return;
+      }
+      displayResults(results);
+    });
   });
 }
 
@@ -241,11 +297,29 @@ function getPageData() {
     const relAttribute = link.getAttribute('rel') || '';
     const isNofollow = relAttribute.toLowerCase().includes('nofollow');
     
+    // Check if link is in a menu/navigation
+    let isInMenu = false;
+    let parent = link.parentElement;
+    const menuSelectors = ['nav', 'header', 'menu', '[role="navigation"]', '.menu', '.nav', '.navigation', '.navbar'];
+    
+    // Check parent elements up to 5 levels to see if any are navigation elements
+    for (let i = 0; i < 5 && parent; i++) {
+      // Check if the parent element is a nav element or has a navigation-related class/ID
+      if (parent.tagName === 'NAV' || 
+          parent.getAttribute('role') === 'navigation' ||
+          menuSelectors.some(selector => parent.matches(selector))) {
+        isInMenu = true;
+        break;
+      }
+      parent = parent.parentElement;
+    }
+    
     data.links.items.push({
       url: href,
       anchor: anchor,
       isInternal: isInternal,
-      isNofollow: isNofollow
+      isNofollow: isNofollow,
+      isInMenu: isInMenu
     });
     
     if (isInternal) {
@@ -755,18 +829,43 @@ function getPageData() {
   return data;
 }
 
+function displayError(message) {
+  // Clear all content and show error message
+  const content = document.querySelector('.content');
+  content.innerHTML = `
+    <div class="section" style="text-align: center; padding: 40px 20px;">
+      <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+      <div style="font-size: 18px; font-weight: 600; margin-bottom: 12px; color: #ff6b6b;">Cannot Analyze This Page</div>
+      <div style="font-size: 14px; color: #a0a0a0; line-height: 1.5;">${message}</div>
+      <button id="retry-button" style="margin-top: 20px;">Try Again</button>
+    </div>
+  `;
+  
+  // Add event listener to the retry button
+  const retryButton = document.getElementById('retry-button');
+  if (retryButton) {
+    retryButton.addEventListener('click', function() {
+      location.reload();
+    });
+  }
+}
+
 function displayResults(results) {
-  if (!results || !results[0] || !results[0].result) return;
+  if (!results || !results[0] || !results[0].result) {
+    displayError('Unable to analyze this page. Please make sure you are on a regular website.');
+    return;
+  }
   
   const data = results[0].result;
   
   // Store the data globally for the copy function to use
   window.pageData = data;
   
-  // Overview tab
-  document.getElementById('title-length').textContent = `${data.title.length} characters | ${data.title}`;
-  document.getElementById('description-length').textContent = data.description ? 
-    `${data.description.length} characters` : 'Missing';
+// Overview tab
+document.getElementById('title-length').innerHTML = `<span class="char-count">${data.title.length} characters</span>${data.title}`;
+document.getElementById('description-length').innerHTML = data.description ? 
+  `<span class="char-count">${data.description.length} characters</span>${data.description}` : 
+  '<span class="missing">Missing</span>';
   
   // Create URL element with additional styling for better overflow handling
   const urlElement = document.getElementById('url');
@@ -787,7 +886,10 @@ function displayResults(results) {
   document.getElementById('robots').textContent = data.robots || 'Missing';
   document.getElementById('word-count').textContent = data.wordCount;
   document.getElementById('lang').textContent = data.lang;
-  document.getElementById('keywords').textContent = data.keywords || 'Missing';
+  document.getElementById('keywords').innerHTML = data.keywords ? 
+  `<span style="margin-right: 6px;"></span>${data.keywords}` : 
+  '<span class="missing">Missing</span>';
+
   
   // Headings tab
   for (let i = 1; i <= 6; i++) {
@@ -1032,6 +1134,7 @@ function exportLinks() {
     const hideExternal = document.getElementById('hide-external').checked;
     const showFollow = document.getElementById('show-follow').checked;
     const showNofollow = document.getElementById('show-nofollow').checked;
+    const hideNavigation = document.getElementById('hide-navigation').checked;
     
     let links = [...window.linksData.items];
     
@@ -1049,6 +1152,11 @@ function exportLinks() {
       links = links.filter(link => !link.isNofollow);
     } else if (!showFollow && showNofollow) {
       links = links.filter(link => link.isNofollow);
+    }
+    
+    // Filter by navigation status
+    if (hideNavigation) {
+      links = links.filter(link => !link.isInMenu);
     }
     
     // Handle duplicates
@@ -1139,6 +1247,8 @@ function filterLinks() {
   const showFollow = document.getElementById('show-follow').checked;
   const showNofollow = document.getElementById('show-nofollow').checked;
   const showFullList = document.getElementById('show-full-list').checked;
+  const hideNavigation = document.getElementById('hide-navigation').checked;
+  const searchQuery = document.getElementById('link-search').value.toLowerCase().trim();
   
   let links = [...window.linksData.items];
   
@@ -1158,6 +1268,19 @@ function filterLinks() {
     links = links.filter(link => link.isNofollow);
   } else if (!showFollow && !showNofollow) {
     // If both are unchecked, show all (same as both checked)
+  }
+  
+  // Filter by navigation status
+  if (hideNavigation) {
+    links = links.filter(link => !link.isInMenu);
+  }
+  
+  // Apply search filter if there's a query
+  if (searchQuery) {
+    links = links.filter(link => 
+      link.url.toLowerCase().includes(searchQuery) || 
+      link.anchor.toLowerCase().includes(searchQuery)
+    );
   }
   
   // Handle duplicates
@@ -1229,7 +1352,10 @@ function filterLinks() {
           }
           
           linkItem.innerHTML = `
-            <div><span class="link-type ${typeClass}">${typeText}</span> <strong>${link.anchor}</strong></div>
+            <div style="position: relative; display: flex; align-items: center;">
+              <span style="flex-grow: 1;"><span class="link-type ${typeClass}">${typeText}</span> ${link.isInMenu ? '<span class="menu-indicator" title="This link is in a navigation menu or header. Navigation links are important for site structure but may have different SEO weight.">🧭 Nav</span> ' : ''}<strong>${link.anchor}</strong></span>
+              <button class="find-link-button" data-url="${link.url}" title="Find this link on page">🔍 Find Link</button>
+            </div>
             <div>${link.url}</div>
           `;
           linksList.appendChild(linkItem);
@@ -1261,7 +1387,10 @@ function filterLinks() {
       }
       
       linkItem.innerHTML = `
-        <div><span class="link-type ${typeClass}">${typeText}</span> <strong>${link.anchor}</strong></div>
+        <div style="position: relative; display: flex; align-items: center;">
+          <span style="flex-grow: 1;"><span class="link-type ${typeClass}">${typeText}</span> ${link.isInMenu ? '<span class="menu-indicator" title="This link is in a navigation menu or header. Navigation links are important for site structure but may have different SEO weight.">🧭 Nav</span> ' : ''}<strong>${link.anchor}</strong></span>
+          <button class="find-link-button" data-url="${link.url}" title="Find this link on page">🔍 Find Link</button>
+        </div>
         <div>${link.url}</div>
       `;
       linksList.appendChild(linkItem);
@@ -1274,15 +1403,58 @@ function filterLinks() {
   filteredCount.style.fontSize = '13px';
   filteredCount.style.fontStyle = 'italic';
   
+  // Add event listeners to the find link buttons and apply styling
+  document.querySelectorAll('.find-link-button').forEach(button => {
+    // Apply subtle styling to the button
+    button.style.backgroundColor = 'transparent';
+    button.style.border = '1px solid #ddd';
+    button.style.borderRadius = '4px';
+    button.style.fontSize = '11px';
+    button.style.padding = '2px 6px';
+    button.style.color = '#888';
+    button.style.cursor = 'pointer';
+    button.style.opacity = '0.7';
+    button.style.marginLeft = '8px';
+    button.style.position = 'relative';
+    button.style.top = '-2px';
+    
+    // Add hover effect
+    button.addEventListener('mouseover', function() {
+      this.style.opacity = '1';
+      this.style.color = '#FF5722';
+    });
+    
+    button.addEventListener('mouseout', function() {
+      this.style.opacity = '0.7';
+      this.style.color = '#888';
+    });
+    
+    // Add click functionality
+    button.addEventListener('click', function() {
+      const url = this.getAttribute('data-url');
+      findLink(url);
+    });
+  });
+  
   let filterDescription = `Showing ${links.length} links`;
   if (hideDuplicates) filterDescription += ' (duplicates hidden)';
   if (hideInternal) filterDescription += ' (internal links hidden)';
   if (hideExternal) filterDescription += ' (external links hidden)';
+  if (hideNavigation) filterDescription += ' (navigation links hidden)';
   if (showFollow && !showNofollow) filterDescription += ' (dofollow links only)';
   if (!showFollow && showNofollow) filterDescription += ' (nofollow links only)';
   
   filteredCount.textContent = filterDescription;
   linksList.insertBefore(filteredCount, linksList.firstChild);
+  
+  // Style menu indicators if any exist
+  document.querySelectorAll('.menu-indicator').forEach(indicator => {
+    indicator.style.fontSize = '11px';
+    indicator.style.color = '#0277bd';
+    indicator.style.marginRight = '4px';
+    indicator.style.cursor = 'help';
+    indicator.style.fontWeight = 'bold';
+  });
 }
 
 function copySchema() {
@@ -1385,11 +1557,10 @@ function exportAllSeoData() {
     csvContent += `Description,\"${(data.description || '').replace(/"/g, '""')}\"\n`;
     csvContent += `Description Length,${data.description ? data.description.length : 0}\n`;
     csvContent += `URL,\"${data.url}\"\n`;
-    csvContent += `Language,\"${data.lang}\"\n`;
     csvContent += `Canonical URL,\"${data.canonical || ''}\"\n`;
     csvContent += `Robots Directive,\"${data.robots || ''}\"\n`;
     csvContent += `Meta Keywords,\"${(data.keywords || '').replace(/"/g, '""')}\"\n`;
-    csvContent += `Total Word Count,${data.wordCount}\n\n`;
+    csvContent += `Word Count,${data.wordCount}\n\n`;
 
     // Add content section after meta information and before headings
     csvContent += '\nPAGE CONTENT ANALYSIS\n';
@@ -1435,7 +1606,7 @@ function exportAllSeoData() {
     csvContent += 'PAGE LINK ANALYSIS AND DISTRIBUTION\n';
     csvContent += 'Link Category,Link Text,Destination URL\n';
     data.links.items.forEach(link => {
-      csvContent += `${link.isInternal ? 'Internal' : 'External'},\"${link.anchor.replace(/"/g, '""')}\",\"${link.url}\"\n`;
+      csvContent += `${link.isInternal ? 'Internal' : 'External'},\"${link.anchor.replace(/"/g, '""')}","${link.url}"\n`;
     });
     csvContent += '\n';
 
@@ -1551,6 +1722,7 @@ function copyLinks() {
     const hideExternal = document.getElementById('hide-external').checked;
     const showFollow = document.getElementById('show-follow').checked;
     const showNofollow = document.getElementById('show-nofollow').checked;
+    const hideNavigation = document.getElementById('hide-navigation').checked;
     
     let links = [...window.linksData.items];
     
@@ -1568,6 +1740,11 @@ function copyLinks() {
       links = links.filter(link => !link.isNofollow);
     } else if (!showFollow && showNofollow) {
       links = links.filter(link => link.isNofollow);
+    }
+    
+    // Filter by navigation status
+    if (hideNavigation) {
+      links = links.filter(link => !link.isInMenu);
     }
     
     // Handle duplicates
@@ -1639,5 +1816,131 @@ function copyLinks() {
           });
       }
     });
+  });
+}
+function findLink(url) {
+  // Check if this link is in a menu based on the stored data
+  let isInMenu = false;
+  if (window.linksData && window.linksData.items) {
+    const linkData = window.linksData.items.find(link => link.url === url);
+    if (linkData && linkData.isInMenu) {
+      isInMenu = true;
+    }
+  }
+  
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    chrome.scripting.executeScript({
+      target: {tabId: tabs[0].id},
+      function: highlightLinkOnPage,
+      args: [url, isInMenu]
+    });
+  });
+}
+
+function highlightLinkOnPage(url, isInMenu) {
+  // Remove any existing highlights
+  const existingHighlights = document.querySelectorAll('.seo-extension-highlight');
+  existingHighlights.forEach(el => {
+    el.classList.remove('seo-extension-highlight');
+  });
+  
+  // Find all anchor elements
+  const links = document.querySelectorAll('a');
+  let foundLink = null;
+  
+  // Look for the link with the matching URL
+  for (const link of links) {
+    if (link.href === url) {
+      foundLink = link;
+      break;
+    }
+  }
+  
+  if (foundLink) {
+    // If the link was found but is in a menu, warn the user
+    if (isInMenu) {
+      console.log('Warning: This link is in a menu, it might be dynamically generated or have special behavior');
+    }
+    
+    // Create and inject the highlight style if it doesn't exist
+    if (!document.getElementById('seo-highlight-style')) {
+      const style = document.createElement('style');
+      style.id = 'seo-highlight-style';
+      style.textContent = `
+        .seo-extension-highlight {
+          outline: 3px solid #FF5722 !important;
+          background-color: rgba(255, 87, 34, 0.2) !important;
+          transition: all 0.3s ease !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // Add highlight class and scroll to the element
+    foundLink.classList.add('seo-extension-highlight');
+    foundLink.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    });
+    
+    // Add a temporary animation for better visibility
+    setTimeout(() => {
+      foundLink.style.transform = 'scale(1.1)';
+      setTimeout(() => {
+        foundLink.style.transform = 'scale(1)';
+      }, 300);
+    }, 300);
+    
+    return true;
+  } else {
+    console.log('Link not found on page:', url);
+    
+    let message = 'Link not found on the current page.';
+    if (isInMenu) {
+      message += ' This link is in a navigation menu, which may be hidden or dynamically generated.';
+    } else {
+      message += ' It might be dynamically generated or not present in the DOM.';
+    }
+    
+    alert(message);
+    return false;
+  }
+}
+
+function copyMetaInfo() {
+  if (!window.pageData) {
+    alert('No page data available to copy');
+    return;
+  }
+
+  const data = window.pageData;
+  
+  let metaText = 'SEO META INFORMATION\n\n';
+  metaText += `Title: ${data.title}\n`;
+  metaText += `Title Length: ${data.title.length} characters\n\n`;
+  metaText += `Description: ${data.description || 'Missing'}\n`;
+  metaText += `Description Length: ${data.description ? data.description.length : 0} characters\n\n`;
+  metaText += `URL: ${data.url}\n`;
+  metaText += `Canonical URL: ${data.canonical || 'Missing'}\n`;
+  metaText += `Robots Directive: ${data.robots || 'Missing'}\n`;
+  metaText += `Lang: ${data.lang}\n`;
+  metaText += `Keywords: ${data.keywords || 'Missing'}\n`;
+  metaText += `Word Count: ${data.wordCount}\n`;
+  
+  navigator.clipboard.writeText(metaText)
+    .then(() => {
+      alert('Meta information copied to clipboard!');
+    })
+    .catch(err => {
+      console.error('Could not copy text: ', err);
+    });
+}
+
+function testRichResults() {
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    const currentUrl = tabs[0].url;
+    const encodedUrl = encodeURIComponent(currentUrl);
+    const richResultsUrl = `https://search.google.com/test/rich-results?url=${encodedUrl}`;
+    chrome.tabs.create({ url: richResultsUrl });
   });
 }

@@ -1,207 +1,326 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SEO Insights</title>
+  <title>Backlinkz SEO Analyzer</title>
   <meta charset="utf-8">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    * {
+      box-sizing: border-box;
+    }
+    
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       width: 580px;
       padding: 0;
       margin: 0;
-      background-color: #f5f5f7;
-      color: #333;
-    }
-    .container {
-      border-radius: 8px;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a0f1a 50%, #2d0f2d 100%);
+      color: #ffffff;
+      position: relative;
       overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    /* Background wave pattern */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        radial-gradient(circle at 20% 80%, rgba(214, 0, 95, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(214, 0, 95, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(214, 0, 95, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .container {
+      position: relative;
+      z-index: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
       margin: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
+    
     .header {
-      background-color: #141c2a;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a0f1a 100%);
       color: white;
-      padding: 18px;
+      padding: 20px;
       text-align: center;
+      border-bottom: 1px solid rgba(214, 0, 95, 0.3);
+      position: relative;
     }
+    
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(214, 0, 95, 0.5) 50%, transparent 100%);
+    }
+    
     .logo {
-      font-weight: 600;
-      font-size: 20px;
-      letter-spacing: 0.5px;
+      font-weight: 700;
+      font-size: 24px;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 0%, #d6005f 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
     }
+    
     .subtitle {
-      font-size: 12px;
+      font-size: 13px;
       opacity: 0.8;
-      margin-top: 4px;
+      font-weight: 400;
+      color: #a0a0a0;
     }
+    
     .content {
-      padding: 15px;
-      background-color: white;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.02);
     }
+    
     .section {
       margin-bottom: 20px;
-      background-color: white;
-      border-radius: 8px;
-      padding: 15px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      border: 1px solid #eee;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
     }
+    
     .section-title {
       font-weight: 600;
-      margin-bottom: 12px;
-      color: #141c2a;
+      margin-bottom: 16px;
+      color: #ffffff;
       font-size: 16px;
       display: flex;
       align-items: center;
+      letter-spacing: -0.3px;
     }
+    
     .section-title span {
-      margin-left: 5px;
+      margin-left: 8px;
     }
+    
     .metric {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       font-size: 14px;
-      padding: 5px 0;
-      border-bottom: 1px solid #f0f0f0;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      align-items: flex-start;
     }
+    
     .metric:last-child {
       border-bottom: none;
     }
+    
     .metric-label {
       font-weight: 500;
-      color: #555;
+      color: #a0a0a0;
+      min-width: 100px;
+      flex-shrink: 0;
     }
+    
     .metric-value {
-      color: #141c2a;
+      color: #ffffff;
       font-weight: 500;
-      word-break: break-word;
-      overflow-wrap: break-word;
+      word-break: normal;
+      word-wrap: break-word;
       max-width: 70%;
+      text-align: right;
+      hyphens: none;
     }
+    
     .missing {
-      color: #e53935;
+      color: #ff6b6b;
       font-weight: 500;
     }
+    
     .present {
-      color: #43a047;
+      color: #51cf66;
       font-weight: 500;
     }
+    
     .tabs {
       display: flex;
-      margin-bottom: 15px;
-      background-color: #f5f5f7;
-      border-radius: 8px;
-      padding: 3px;
+      margin-bottom: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
+    
     .tab {
       flex: 1;
       text-align: center;
-      padding: 12px 10px;
-      background-color: transparent;
+      padding: 12px 8px;
+      background: transparent;
       cursor: pointer;
-      color: #666;
+      color: #a0a0a0;
       font-weight: 500;
-      border-radius: 6px;
-      transition: all 0.2s ease;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      font-size: 12px;
+      border: none;
     }
+    
+    .tab:hover {
+      color: #ffffff;
+      background: rgba(214, 0, 95, 0.1);
+    }
+    
     .tab.active {
-      background-color: #141c2a;
+      background: linear-gradient(135deg, #d6005f 0%, #a6004c 100%);
       color: white;
-      font-weight: 500;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(214, 0, 95, 0.3);
     }
+    
     .tab-content {
       display: none;
     }
+    
     .tab-content.active {
       display: block;
     }
+    
     button {
-      background-color: #ff6b00;
+      background: linear-gradient(135deg, #d6005f 0%, #a6004c 100%);
       color: white;
       border: none;
-      padding: 10px 16px;
-      border-radius: 6px;
+      padding: 12px 20px;
+      border-radius: 8px;
       cursor: pointer;
-      margin-top: 10px;
-      font-weight: 500;
-      transition: background-color 0.2s ease;
-      box-shadow: 0 2px 4px rgba(255,107,0,0.2);
+      margin-top: 12px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(214, 0, 95, 0.3);
+      font-size: 13px;
+      letter-spacing: -0.2px;
     }
+    
     button:hover {
-      background-color: #e56200;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(214, 0, 95, 0.4);
     }
+    
+    .secondary-button {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .secondary-button:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    
     .heading-item {
-      margin-bottom: 10px;
-      padding: 8px;
-      border-radius: 4px;
-      background-color: #f9f9f9;
+      margin-bottom: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
+    
     .link-item {
       margin-bottom: 12px;
       font-size: 13px;
-      padding: 10px;
-      border-radius: 6px;
-      background-color: #f9f9f9;
+      padding: 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
+    
     .footer {
       text-align: center;
       font-size: 12px;
-      color: #888;
+      color: #a0a0a0;
       margin-top: 20px;
-      padding-top: 15px;
-      border-top: 1px solid #eee;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
+    
     .emoji {
       font-size: 18px;
-      margin-right: 5px;
+      margin-right: 8px;
     }
+    
     input[type="checkbox"] {
-      accent-color: #ff6b00;
-      margin-right: 5px;
+      accent-color: #d6005f;
+      margin-right: 8px;
     }
+    
     label {
       cursor: pointer;
       user-select: none;
+      color: #a0a0a0;
     }
+    
     label:hover {
-      color: #ff6b00;
+      color: #d6005f;
     }
+    
     .filter-options {
-      margin-top: 10px;
-      margin-bottom: 10px;
+      margin-top: 12px;
+      margin-bottom: 12px;
     }
+    
     .filter-title {
-      font-weight: 500;
-      margin-bottom: 5px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #ffffff;
     }
+    
     .filter-checkboxes {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
     }
+    
     .filter-option {
       display: flex;
       align-items: center;
       font-size: 13px;
     }
+    
     .footer-buttons {
       display: flex;
       justify-content: center;
-      gap: 10px;
+      gap: 12px;
+      margin-bottom: 12px;
     }
+    
     .footer-button {
-      background-color: #141c2a;
+      background: rgba(255, 255, 255, 0.1);
       color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 8px 16px;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 12px;
-      transition: background-color 0.2s ease;
+      transition: all 0.3s ease;
+      font-weight: 500;
     }
+    
     .footer-button:hover {
-      background-color: #2c3e50;
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
     }
     
     /* Specific styles for URLs to prevent overflow */
@@ -214,27 +333,156 @@
     /* Link type styling */
     .link-type {
       font-weight: 700;
-      padding: 3px 6px;
-      border-radius: 4px;
-      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
       display: inline-block;
-      margin-right: 5px;
+      margin-right: 6px;
     }
+    
     .internal-dofollow {
-      background-color: #4caf50;
+      background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
       color: white;
     }
+    
     .internal-nofollow {
-      background-color: #ffc107;
+      background: linear-gradient(135deg, #ffd43b 0%, #fcc419 100%);
       color: #333;
     }
+    
     .external-dofollow {
-      background-color: #2196f3;
+      background: linear-gradient(135deg, #339af0 0%, #228be6 100%);
       color: white;
     }
+    
     .external-nofollow {
-      background-color: #ff5722;
+      background: linear-gradient(135deg, #ff6b6b 0%, #fa5252 100%);
       color: white;
+    }
+    
+    /* Character count styling for title and description */
+    .char-count {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.1);
+      color: #a0a0a0;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+    
+    /* Fix for description, title, and keywords to prevent word breaks */
+    #description-length, #title-length, #keywords {
+      font-size: 13px;
+      word-break: normal;
+      word-wrap: normal;
+      max-width: 100%;
+      white-space: normal;
+      hyphens: none;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    
+    /* Search input styling */
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+      transition: all 0.3s ease;
+    }
+    
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #d6005f;
+      box-shadow: 0 0 0 3px rgba(214, 0, 95, 0.1);
+    }
+    
+    input[type="text"]::placeholder {
+      color: #a0a0a0;
+    }
+    
+    /* Services link styling */
+    .services-link {
+      color: #d6005f;
+      font-size: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .services-link:hover {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+    
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: rgba(214, 0, 95, 0.5);
+      border-radius: 3px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(214, 0, 95, 0.7);
+    }
+    
+    /* Additional utility classes for inline styles */
+    .list-container {
+      margin-top: 15px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .filter-checkboxes-margin {
+      margin-top: 8px;
+    }
+    
+    .search-container {
+      margin-top: 15px;
+      margin-bottom: 10px;
+    }
+    
+    .header-actions {
+      text-align: right;
+      margin-top: -30px;
+    }
+    
+    .footer-button-small {
+      font-size: 12px;
+    }
+    
+    .business-description {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 13px;
+      color: #a0a0a0;
+    }
+    
+    .footer-buttons-margin {
+      margin-bottom: 10px;
+    }
+    
+    .footer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
   </style>
   <script src="popup.js"></script>
@@ -242,7 +490,7 @@
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo">SEO Insights</div>
+      <div class="logo">Backlinkz SEO Analyzer</div>
       <div class="subtitle">Analyze any webpage for SEO metrics</div>
     </div>
     <div class="content">
@@ -292,6 +540,7 @@
             <div class="metric-label">Keywords </div>
             <div class="metric-value" id="keywords">Loading...</div>
           </div>
+          <button id="copy-meta-info" class="secondary-button">Copy Meta Info</button>
           <button id="export-all">Export All SEO Data</button>
         </div>
       </div>
@@ -324,7 +573,7 @@
             <div class="metric-value" id="h6-count">Loading...</div>
           </div>
           <button id="copy-headings">Copy All Headings</button>
-          <div id="headings-list" style="margin-top: 15px; max-height: 300px; overflow-y: auto;"></div>
+          <div id="headings-list" class="list-container"></div>
         </div>
       </div>
       
@@ -363,7 +612,7 @@
                 <span>Group by Domain</span>
               </label>
             </div>
-            <div class="filter-checkboxes" style="margin-top: 8px;">
+            <div class="filter-checkboxes filter-checkboxes-margin">
               <label class="filter-option">
                 <input type="checkbox" id="show-follow"> 
                 <span>DoFollow Links</span>
@@ -373,14 +622,21 @@
                 <span>Nofollow Links</span>
               </label>
               <label class="filter-option">
+                <input type="checkbox" id="hide-navigation"> 
+                <span>Hide Navigation Links</span>
+              </label>
+              <label class="filter-option">
                 <input type="checkbox" id="show-full-list" checked> 
                 <span>Show Full List</span>
               </label>
             </div>
-          </div>
-          <button id="export-links">Export Links</button>
-          <button id="copy-links">Copy Links</button>
-          <div id="links-list" style="margin-top: 15px; max-height: 300px; overflow-y: auto;"></div>
+                      </div>
+            <div class="search-container">
+              <input type="text" id="link-search" placeholder="Search links...">
+            </div>
+            <button id="export-links">Export Links</button>
+            <button id="copy-links">Copy Links</button>
+            <div id="links-list" class="list-container"></div>
         </div>
       </div>
       
@@ -396,7 +652,7 @@
             <div class="metric-value" id="missing-alt">Loading...</div>
           </div>
           <button id="copy-image-links">Copy Image Links</button>
-          <div id="images-list" style="margin-top: 15px; max-height: 300px; overflow-y: auto;"></div>
+          <div id="images-list" class="list-container"></div>
         </div>
       </div>
       
@@ -418,8 +674,11 @@
             <div class="metric-label">Schema Count</div>
             <div class="metric-value" id="schema-count">Loading...</div>
           </div>
-          <button id="copy-schema">Copy Schema JSON</button>
-          <div id="schema-list" style="margin-top: 15px; max-height: 300px; overflow-y: auto;"></div>
+          <div class="button-group">
+            <button id="copy-schema">Copy Schema JSON</button>
+            <button id="test-schema-rich-results" class="secondary-button">Test Rich Results</button>
+          </div>
+          <div id="schema-list" class="list-container"></div>
         </div>
       </div>
       
@@ -430,18 +689,21 @@
             <div class="metric-label">Total Hreflang Tags</div>
             <div class="metric-value" id="hreflang-count">Loading...</div>
           </div>
-          <button id="copy-hreflang">Copy Hreflang Data</button>
-          <div id="hreflang-list" style="margin-top: 15px; max-height: 300px; overflow-y: auto;"></div>
+          <div class="button-group">
+            <button id="copy-hreflang">Copy Hreflang Data</button>
+            <button id="test-hreflang-rich-results" class="secondary-button">Test Rich Results</button>
+          </div>
+          <div id="hreflang-list" class="list-container"></div>
         </div>
       </div>
       
       <div id="local" class="tab-content">
         <div class="section">
           <div class="section-title"><span class="emoji">🏢</span> <span>Business Information</span></div>
-          <div class="header-actions" style="text-align: right; margin-top: -30px;">
-            <button id="copy-business-info" class="footer-button" style="font-size: 12px;">Copy All</button>
+          <div class="header-actions">
+            <button id="copy-business-info" class="footer-button footer-button-small">Copy All</button>
           </div>
-          <p style="margin-top: 0; margin-bottom: 15px; font-size: 13px; color: #666;">
+          <p class="business-description">
             This tab extracts business information from Google Maps listings and other local business pages. Best results when analyzing a Google Maps business page.
           </p>
           <div class="metric">
@@ -489,13 +751,12 @@
       </div>
       
       <div class="footer">
-        <div class="footer-buttons" style="margin-bottom: 10px;">
+        <div class="footer-buttons footer-buttons-margin">
           <button id="view-robots" class="footer-button">robots.txt</button>
           <button id="view-sitemap" class="footer-button">sitemap.xml</button>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <span><a href="#" id="agency-link" style="color: #ff6b00; font-weight: 500; text-decoration: none;">See our collection of free SEO tools</a></span>
-          <span><a href="#" id="services-link" style="color: #141c2a; font-size: 12px; text-decoration: none;">Try our Link Building, Link Indexing and Rank Tracking services →</a></span>
+        <div class="footer-links">
+          <span><a href="#" id="services-link" class="services-link">Order From Our High Quality Backlinks Marketplace and Services  →</a></span>
         </div>
       </div>
     </div>
