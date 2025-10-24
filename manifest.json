@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Backlinkz SEO Analyzer",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Analyze SEO metrics and local business information for any webpage",
   "action": {
     "default_popup": "popup.html",
