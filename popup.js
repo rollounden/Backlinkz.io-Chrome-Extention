@@ -1018,6 +1018,7 @@ document.getElementById('description-length').innerHTML = data.description ?
       schemaContent.style.overflow = 'auto';
       schemaContent.style.fontSize = '12px';
       schemaContent.style.backgroundColor = '#f5f5f7';
+      schemaContent.style.color = '#1a1a1a';
       schemaContent.style.padding = '8px';
       schemaContent.style.borderRadius = '4px';
       schemaContent.style.marginTop = '5px';
@@ -1353,10 +1354,10 @@ function filterLinks() {
           
           linkItem.innerHTML = `
             <div style="position: relative; display: flex; align-items: center;">
-              <span style="flex-grow: 1;"><span class="link-type ${typeClass}">${typeText}</span> ${link.isInMenu ? '<span class="menu-indicator" title="This link is in a navigation menu or header. Navigation links are important for site structure but may have different SEO weight.">🧭 Nav</span> ' : ''}<strong>${link.anchor}</strong></span>
-              <button class="find-link-button" data-url="${link.url}" title="Find this link on page">🔍 Find Link</button>
+              <span style="flex-grow: 1;"><span class="link-type ${typeClass}" role="status" aria-label="${typeText}">${typeText}</span> ${link.isInMenu ? '<span class="nav-indicator" role="note" aria-label="Navigation link" title="This link is in a navigation menu or header. Navigation links are important for site structure but may have different SEO weight.">Nav</span> ' : ''}<strong>${link.anchor || 'No anchor text'}</strong></span>
+              <button class="find-link-button" data-url="${link.url}" aria-label="Find link ${link.anchor || link.url} on page" title="Find this link on page">🔍 Find Link</button>
             </div>
-            <div>${link.url}</div>
+            <div style="color: #b8b8b8; font-size: 12px; margin-top: 4px;">${link.url}</div>
           `;
           linksList.appendChild(linkItem);
         });
@@ -1388,10 +1389,10 @@ function filterLinks() {
       
       linkItem.innerHTML = `
         <div style="position: relative; display: flex; align-items: center;">
-          <span style="flex-grow: 1;"><span class="link-type ${typeClass}">${typeText}</span> ${link.isInMenu ? '<span class="menu-indicator" title="This link is in a navigation menu or header. Navigation links are important for site structure but may have different SEO weight.">🧭 Nav</span> ' : ''}<strong>${link.anchor}</strong></span>
-          <button class="find-link-button" data-url="${link.url}" title="Find this link on page">🔍 Find Link</button>
+          <span style="flex-grow: 1;"><span class="link-type ${typeClass}" role="status" aria-label="${typeText}">${typeText}</span> ${link.isInMenu ? '<span class="nav-indicator" role="note" aria-label="Navigation link" title="This link is in a navigation menu or header. Navigation links are important for site structure but may have different SEO weight.">Nav</span> ' : ''}<strong>${link.anchor || 'No anchor text'}</strong></span>
+          <button class="find-link-button" data-url="${link.url}" aria-label="Find link ${link.anchor || link.url} on page" title="Find this link on page">🔍 Find Link</button>
         </div>
-        <div>${link.url}</div>
+        <div style="color: #b8b8b8; font-size: 12px; margin-top: 4px;">${link.url}</div>
       `;
       linksList.appendChild(linkItem);
     });
@@ -1405,28 +1406,40 @@ function filterLinks() {
   
   // Add event listeners to the find link buttons and apply styling
   document.querySelectorAll('.find-link-button').forEach(button => {
-    // Apply subtle styling to the button
-    button.style.backgroundColor = 'transparent';
-    button.style.border = '1px solid #ddd';
+    // Apply accessible styling to the button with better contrast
+    button.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+    button.style.border = '1px solid rgba(255, 255, 255, 0.3)';
     button.style.borderRadius = '4px';
     button.style.fontSize = '11px';
-    button.style.padding = '2px 6px';
-    button.style.color = '#888';
+    button.style.padding = '4px 8px';
+    button.style.color = '#e0e0e0';
     button.style.cursor = 'pointer';
-    button.style.opacity = '0.7';
     button.style.marginLeft = '8px';
     button.style.position = 'relative';
     button.style.top = '-2px';
+    button.style.transition = 'all 0.2s ease';
     
     // Add hover effect
     button.addEventListener('mouseover', function() {
-      this.style.opacity = '1';
-      this.style.color = '#FF5722';
+      this.style.backgroundColor = 'rgba(214, 0, 95, 0.2)';
+      this.style.borderColor = '#d6005f';
+      this.style.color = '#ffffff';
     });
     
     button.addEventListener('mouseout', function() {
-      this.style.opacity = '0.7';
-      this.style.color = '#888';
+      this.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+      this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+      this.style.color = '#e0e0e0';
+    });
+    
+    // Add focus effect for keyboard navigation
+    button.addEventListener('focus', function() {
+      this.style.outline = '2px solid #d6005f';
+      this.style.outlineOffset = '2px';
+    });
+    
+    button.addEventListener('blur', function() {
+      this.style.outline = 'none';
     });
     
     // Add click functionality
@@ -1450,10 +1463,13 @@ function filterLinks() {
   // Style menu indicators if any exist
   document.querySelectorAll('.menu-indicator').forEach(indicator => {
     indicator.style.fontSize = '11px';
-    indicator.style.color = '#0277bd';
+    indicator.style.color = '#4fc3f7';
     indicator.style.marginRight = '4px';
     indicator.style.cursor = 'help';
     indicator.style.fontWeight = 'bold';
+    indicator.style.backgroundColor = 'rgba(79, 195, 247, 0.15)';
+    indicator.style.padding = '2px 6px';
+    indicator.style.borderRadius = '4px';
   });
 }
 
