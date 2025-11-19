@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Backlinzk.io: Making SEO Easy ",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Analyze SEO signals, write better code and analyse local business information for any webpage",
   "action": {
     "default_popup": "popup.html",

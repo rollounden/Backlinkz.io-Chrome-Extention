@@ -29,6 +29,17 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('copy-business-info').addEventListener('click', copyBusinessInfo);
   document.getElementById('copy-map-code').addEventListener('click', copyMapCode);
   document.getElementById('copy-meta-info').addEventListener('click', copyMetaInfo);
+
+  // External Analysis Buttons (Ahrefs)
+  document.getElementById('ahrefs-backlinks').addEventListener('click', function() {
+    openAhrefsTool('backlink-checker');
+  });
+  document.getElementById('ahrefs-authority').addEventListener('click', function() {
+    openAhrefsTool('website-authority-checker');
+  });
+  document.getElementById('ahrefs-traffic').addEventListener('click', function() {
+    openAhrefsTool('traffic-checker');
+  });
   
   // Set up Visualization buttons
   document.getElementById('visualize-headings').addEventListener('click', visualizeHeadings);
@@ -1963,6 +1974,37 @@ function testRichResults() {
     const encodedUrl = encodeURIComponent(currentUrl);
     const richResultsUrl = `https://search.google.com/test/rich-results?url=${encodedUrl}`;
     chrome.tabs.create({ url: richResultsUrl });
+  });
+}
+
+// Open Ahrefs Tools
+function openAhrefsTool(toolName) {
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    const currentUrl = tabs[0].url;
+    // Basic validation to ensure we are checking a valid http/https URL
+    if (!currentUrl.startsWith('http')) {
+      alert('Please navigate to a valid website first.');
+      return;
+    }
+    
+    const encodedUrl = encodeURIComponent(currentUrl);
+    let ahrefsUrl = '';
+    
+    switch(toolName) {
+      case 'backlink-checker':
+        ahrefsUrl = `https://ahrefs.com/backlink-checker/?input=${encodedUrl}`;
+        break;
+      case 'website-authority-checker':
+        ahrefsUrl = `https://ahrefs.com/website-authority-checker/?input=${encodedUrl}`;
+        break;
+      case 'traffic-checker':
+        ahrefsUrl = `https://ahrefs.com/traffic-checker/?input=${encodedUrl}`;
+        break;
+    }
+    
+    if (ahrefsUrl) {
+      chrome.tabs.create({ url: ahrefsUrl });
+    }
   });
 }
 
