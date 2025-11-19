@@ -693,7 +693,10 @@
             <div class="metric-label">H6</div>
             <div class="metric-value" id="h6-count">Loading...</div>
           </div>
-          <button id="copy-headings">Copy All Headings</button>
+          <div class="button-group">
+            <button id="copy-headings">Copy All Headings</button>
+            <button id="visualize-headings" class="secondary-button">👁️ Visualize Headings</button>
+          </div>
           <div id="headings-list" class="list-container"></div>
         </div>
       </div>
@@ -756,7 +759,10 @@
               <input type="text" id="link-search" placeholder="Search links...">
             </div>
             <button id="export-links">Export Links</button>
-            <button id="copy-links">Copy Links</button>
+            <div class="button-group" style="margin-top: 10px;">
+              <button id="copy-links">Copy Links</button>
+              <button id="visualize-links" class="secondary-button">👁️ Visualize Links</button>
+            </div>
             <div id="links-list" class="list-container"></div>
         </div>
       </div>
@@ -772,7 +778,10 @@
             <div class="metric-label">Missing Alt Text</div>
             <div class="metric-value" id="missing-alt">Loading...</div>
           </div>
-          <button id="copy-image-links">Copy Image Links</button>
+          <div class="button-group">
+            <button id="copy-image-links">Copy Image Links</button>
+            <button id="visualize-missing-alt" class="secondary-button" style="border-color: #ff6b6b; color: #ff6b6b;">👁️ Highlight Missing Alt</button>
+          </div>
           <div id="images-list" class="list-container"></div>
         </div>
       </div>

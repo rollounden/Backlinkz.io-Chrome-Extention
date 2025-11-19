@@ -30,6 +30,11 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('copy-map-code').addEventListener('click', copyMapCode);
   document.getElementById('copy-meta-info').addEventListener('click', copyMetaInfo);
   
+  // Set up Visualization buttons
+  document.getElementById('visualize-headings').addEventListener('click', visualizeHeadings);
+  document.getElementById('visualize-missing-alt').addEventListener('click', visualizeMissingAlt);
+  document.getElementById('visualize-links').addEventListener('click', visualizeLinks);
+  
   // Set up Rich Results Test buttons
   document.getElementById('test-schema-rich-results').addEventListener('click', testRichResults);
   document.getElementById('test-hreflang-rich-results').addEventListener('click', testRichResults);
@@ -1958,5 +1963,196 @@ function testRichResults() {
     const encodedUrl = encodeURIComponent(currentUrl);
     const richResultsUrl = `https://search.google.com/test/rich-results?url=${encodedUrl}`;
     chrome.tabs.create({ url: richResultsUrl });
+  });
+}
+
+// Visualization Functions
+
+function visualizeHeadings() {
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    chrome.scripting.insertCSS({
+      target: {tabId: tabs[0].id},
+      css: `
+        .backlinkz-overlay-heading { 
+          outline: 2px dashed #f06292 !important; 
+          position: relative !important; 
+        }
+        .backlinkz-overlay-heading::before { 
+          content: attr(data-tag-name); 
+          position: absolute; 
+          top: -20px; 
+          left: 0; 
+          background: #f06292; 
+          color: white; 
+          padding: 2px 5px; 
+          font-size: 12px; 
+          font-weight: bold; 
+          z-index: 10000; 
+          border-radius: 3px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .backlinkz-overlay-heading-h1 { outline-color: #d500f9 !important; }
+        .backlinkz-overlay-heading-h1::before { background: #d500f9; }
+        .backlinkz-overlay-heading-h2 { outline-color: #c51162 !important; }
+        .backlinkz-overlay-heading-h2::before { background: #c51162; }
+        .backlinkz-overlay-heading-h3 { outline-color: #aa00ff !important; }
+        .backlinkz-overlay-heading-h3::before { background: #aa00ff; }
+      `
+    });
+    
+    chrome.scripting.executeScript({
+      target: {tabId: tabs[0].id},
+      function: function() {
+        // Check if already active, if so, remove
+        const existing = document.querySelectorAll('.backlinkz-overlay-heading');
+        if (existing.length > 0) {
+          existing.forEach(el => {
+            el.classList.remove('backlinkz-overlay-heading');
+            el.classList.remove('backlinkz-overlay-heading-h1');
+            el.classList.remove('backlinkz-overlay-heading-h2');
+            el.classList.remove('backlinkz-overlay-heading-h3');
+            el.removeAttribute('data-tag-name');
+          });
+          return 'Visualizations removed';
+        }
+        
+        // Apply visualizations
+        let count = 0;
+        for (let i = 1; i <= 6; i++) {
+          const headings = document.querySelectorAll('h' + i);
+          headings.forEach(h => {
+            h.classList.add('backlinkz-overlay-heading');
+            if (i <= 3) h.classList.add('backlinkz-overlay-heading-h' + i);
+            h.setAttribute('data-tag-name', 'H' + i);
+            count++;
+          });
+        }
+        return `Visualized ${count} headings`;
+      }
+    }, function(results) {
+      if (chrome.runtime.lastError) {
+        console.error(chrome.runtime.lastError);
+        return;
+      }
+      // Optional: Show feedback
+    });
+  });
+}
+
+function visualizeMissingAlt() {
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    chrome.scripting.insertCSS({
+      target: {tabId: tabs[0].id},
+      css: `
+        .backlinkz-overlay-missing-alt { 
+          outline: 5px solid #ff6b6b !important; 
+          position: relative !important; 
+        }
+        .backlinkz-overlay-missing-alt-label {
+          position: absolute;
+          background: #ff6b6b;
+          color: white;
+          padding: 4px 8px;
+          font-size: 12px;
+          font-weight: bold;
+          z-index: 10000;
+          border-radius: 4px;
+          pointer-events: none;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+      `
+    });
+    
+    chrome.scripting.executeScript({
+      target: {tabId: tabs[0].id},
+      function: function() {
+        const existing = document.querySelectorAll('.backlinkz-overlay-missing-alt');
+        if (existing.length > 0) {
+          existing.forEach(el => el.classList.remove('backlinkz-overlay-missing-alt'));
+          document.querySelectorAll('.backlinkz-overlay-missing-alt-label').forEach(el => el.remove());
+          return 'Visualizations removed';
+        }
+        
+        const images = document.querySelectorAll('img');
+        let count = 0;
+        
+        images.forEach(img => {
+          const alt = img.getAttribute('alt');
+          if (alt === null || alt.trim() === '') {
+            img.classList.add('backlinkz-overlay-missing-alt');
+            
+            // Create a floating label
+            const label = document.createElement('div');
+            label.className = 'backlinkz-overlay-missing-alt-label';
+            label.textContent = 'MISSING ALT';
+            
+            // Position logic
+            const rect = img.getBoundingClientRect();
+            label.style.top = (rect.top + window.scrollY) + 'px';
+            label.style.left = (rect.left + window.scrollX) + 'px';
+            document.body.appendChild(label);
+            
+            count++;
+          }
+        });
+        
+        return `Found ${count} images without ALT text`;
+      }
+    });
+  });
+}
+
+function visualizeLinks() {
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    chrome.scripting.insertCSS({
+      target: {tabId: tabs[0].id},
+      css: `
+        .backlinkz-overlay-link-internal { 
+          outline: 2px solid #51cf66 !important; 
+          background: rgba(81, 207, 102, 0.1) !important; 
+        }
+        .backlinkz-overlay-link-external { 
+          outline: 2px solid #339af0 !important; 
+          background: rgba(51, 154, 240, 0.1) !important; 
+        }
+        .backlinkz-overlay-link-nofollow {
+          border-bottom: 2px dashed #ff6b6b !important;
+        }
+      `
+    });
+    
+    chrome.scripting.executeScript({
+      target: {tabId: tabs[0].id},
+      function: function() {
+        const existing = document.querySelectorAll('.backlinkz-overlay-link-internal, .backlinkz-overlay-link-external');
+        if (existing.length > 0) {
+          existing.forEach(el => {
+            el.classList.remove('backlinkz-overlay-link-internal');
+            el.classList.remove('backlinkz-overlay-link-external');
+            el.classList.remove('backlinkz-overlay-link-nofollow');
+          });
+          return 'Visualizations removed';
+        }
+        
+        const links = document.querySelectorAll('a');
+        const hostname = window.location.hostname;
+        
+        links.forEach(link => {
+          if (!link.href) return;
+          
+          // Check Internal vs External
+          if (link.href.includes(hostname) || link.getAttribute('href').startsWith('/')) {
+            link.classList.add('backlinkz-overlay-link-internal');
+          } else if (link.href.startsWith('http')) {
+            link.classList.add('backlinkz-overlay-link-external');
+          }
+          
+          // Check Nofollow
+          if (link.rel && link.rel.includes('nofollow')) {
+            link.classList.add('backlinkz-overlay-link-nofollow');
+          }
+        });
+      }
+    });
   });
 }

@@ -39,6 +39,7 @@ Advanced link analysis with powerful filtering:
 - Hide navigation links
 - Show full list or summary view
 - Real-time search functionality
+- Find individual links and Highlight them
 
 **Visual Link Classification:**
 - Internal DoFollow (green with ↻ icon)
