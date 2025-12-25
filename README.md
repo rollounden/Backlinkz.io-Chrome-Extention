@@ -1,6 +1,8 @@
-# Backlinkz.io SEO Analyzer - Chrome Extension
+# Backlinkz.io SEO Checker Tool & Analyzer - Chrome Extension
 
 A comprehensive Chrome extension that analyzes and displays key SEO metrics from any webpage. Perfect for SEO professionals, marketers, and web developers who need quick, detailed insights into on-page SEO elements.
+
+**[⬇️ Download from Chrome Web Store](https://chromewebstore.google.com/detail/backlinkz/pbpmiiboomdekoklaiobhcpkddmlkgdd)** | **[🌐 Visit Backlinkz.io](https://backlinkz.io/)**
 
 ## 🚀 Features Overview
 
@@ -15,14 +17,24 @@ Complete meta information analysis at a glance:
 - **Keywords Meta Tag** - Meta keywords display
 - **Robots Meta Tag** - Index/noindex and follow/nofollow directives
 - **Copy Meta Info** - One-click copy of all meta data
-- **Export All SEO Data** - Comprehensive data export
+- **External Analysis** - Quick links to Ahrefs (Backlinks, Authority, Traffic)
+
+  
+
+### 👁️ **Visual Overlays (SEO X-Ray)**
+See SEO data directly on the webpage with visual highlighters:
+- **Visualize Headings** - Draws colored boxes around H1-H6 tags to show structure.
+- **Highlight Missing Alt** - Adds red borders to images missing accessibility tags.
+- **Visualize Links** - Color-codes internal (Green) vs external (Blue) links.
+- 
+<img width="1920" height="1160" alt="Screenshot from 2025-11-19 20-12-57" src="https://github.com/user-attachments/assets/2a2e4c7e-093a-49ca-a67b-86f64d049ba5" />
 
 ### 📋 **Headings Tab**
 Heading structure analysis for content hierarchy:
 - **H1-H6 Counts** - Individual counts for each heading level
 - **Full Headings List** - Complete hierarchy display with actual heading text
 - **Copy All Headings** - Export all headings to clipboard
-- Helps identify heading structure issues and SEO optimization opportunities
+- **Visualizer** - See heading structure directly on the page
 
 ### 🔗 **Links Tab**
 Advanced link analysis with powerful filtering:
@@ -47,9 +59,7 @@ Advanced link analysis with powerful filtering:
 - External DoFollow (blue with ↗ icon)
 - External NoFollow (red with ⊗ icon)
 
-**Export Options:**
-- Export links to file
-- Copy links to clipboard
+<img width="1920" height="1160" alt="chrome-extention-links-feature" src="https://github.com/user-attachments/assets/bae9946b-b26f-4c22-a7c6-fda4ce1ea467" />
 
 ### 🖼️ **Images Tab**
 Image optimization analysis:
@@ -57,12 +67,13 @@ Image optimization analysis:
 - **Missing Alt Text Detection** - Identifies accessibility issues
 - **Full Images List** - All images with source URLs
 - **Copy Image Links** - Export image URLs for further analysis
+- **Visualizer** - Highlight broken/missing alt images on the page
 
 ### 📱 **Social Media Tab**
 Social sharing optimization:
 - **Open Graph Tags** - Complete OG meta tags (og:title, og:description, og:image, og:url, etc.)
 - **Twitter Card Data** - Twitter-specific meta tags for card previews
-- Ensures proper social media sharing appearance
+- **Educational Tooltips** - Explains why these tags matter for social CTR
 
 ### 🔍 **Schema Tab**
 Structured data analysis supporting multiple formats:
@@ -73,13 +84,17 @@ Structured data analysis supporting multiple formats:
 - **Copy Schema JSON** - Export schema data
 - **Test Rich Results** - Direct link to Google's Rich Results Test
 
+
+<img width="1899" height="1033" alt="ChromeExtentionSchemaFilter" src="https://github.com/user-attachments/assets/0f85c640-4e91-47f8-9315-0c89dc666aed" />
+
+  
+
 ### 🌐 **Hreflang Tab**
 International SEO analysis:
 - **Hreflang Tags Detection** - Identifies language/region targeting
 - **Total Hreflang Count** - Number of international variations
 - **Copy Hreflang Data** - Export hreflang information
 - **Test Rich Results** - Validate hreflang implementation
-- Supports both link and meta tag hreflang formats
 
 ### 🏢 **Local Business Tab (Maps)**
 Comprehensive local business information extraction (optimized for Google Maps):
@@ -96,32 +111,36 @@ Comprehensive local business information extraction (optimized for Google Maps):
 - **Copy Business Info** - Export all business data
 - **Copy Map Code** - Copy ready-to-use embed code
 
+<img width="1920" height="1160" alt="backlinkz-chrome-extention-maps-feature" src="https://github.com/user-attachments/assets/546230d9-13fe-4cd6-8e30-04b66271c93e" />
+
+
+
 ## 🛠️ Additional Features
+
+### Educational Tooltips
+- **Beginner Friendly** - Hover over any technical term (Canonical, Robots, OG) for a clear, actionable explanation.
+- **Contextual Help** - Learn SEO concepts while you audit.
+
+### UI/UX Features
+- **Dark/Light Mode** - Automatically respects system preference, with manual toggle (☀️/🌙).
+- **Modern Theme** - Sleek design with purple/pink accents.
+- **Tabbed Interface** - Easy navigation between analysis sections.
+- **Visual Status Indicators** - ✓ for present elements, ✕ for missing.
+- **Responsive Design** - Optimized 580px width popup.
 
 ### Footer Utilities
 - **robots.txt Viewer** - Quick access to site's robots.txt file
 - **sitemap.xml Viewer** - Quick access to site's XML sitemap
 - **Services Link** - Direct link to Backlinkz.io marketplace
 
-### UI/UX Features
-- **Modern Dark Theme** - Sleek gradient design with purple/pink accents
-- **Tabbed Interface** - Easy navigation between analysis sections
-- **Visual Status Indicators** - ✓ for present elements, ✕ for missing
-- **Responsive Design** - Optimized 580px width popup
-- **Smooth Transitions** - Professional animations and hover effects
-- **Color-Coded Elements** - Accessibility-friendly with icons and borders
-- **Custom Scrollbars** - Styled scrollbars matching the theme
-
-### Technical Capabilities
-- **Manifest V3** - Latest Chrome extension architecture
-- **Active Tab Permissions** - Analyzes current webpage only
-- **Script Injection** - Direct page context analysis
-- **Error Handling** - Graceful handling of restricted pages
-- **Multiple Export Options** - Copy to clipboard and file export
-- **Real-time Analysis** - Instant results on popup open
-
 ## 📦 Installation
 
+### Option 1: Install from Chrome Web Store (Recommended)
+**[⬇️ Download and Install from Chrome Web Store](https://chromewebstore.google.com/detail/backlinkz/pbpmiiboomdekoklaiobhcpkddmlkgdd)**
+
+Simply click "Add to Chrome" on the Chrome Web Store page for automatic installation and updates.
+
+### Option 2: Manual Installation (Developer Mode)
 1. Download or clone this repository
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" in the top right
@@ -148,6 +167,8 @@ This extension:
 - Does not track your browsing history
 - Requires minimal permissions (activeTab, scripting)
 
+**Full Privacy Policy:** See [PRIVACY_POLICY.md](PRIVACY_POLICY.md) for complete details.
+
 ## 🌟 Perfect For
 
 - SEO Professionals
@@ -159,14 +180,19 @@ This extension:
 
 ## 📝 Version
 
-Current Version: 1.1
+Current Version: 1.2
 
 ## 🔗 Links
 
-- [Backlinkz.io Marketplace](https://backlinkz.io/)
+- **[⬇️ Download from Chrome Web Store](https://chromewebstore.google.com/detail/backlinkz/pbpmiiboomdekoklaiobhcpkddmlkgdd)** - Get the extension
+- **[🌐 Backlinkz.io](https://backlinkz.io/)** - Visit our marketplace for SEO services
 
 ## 📄 License
 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## ©️ Copyright
+
+Copyright (c) 2025 [Backlinkz.io](https://backlinkz.io). All rights reserved.
+
 This project is part of the Backlinkz.io SEO toolkit.
-
-

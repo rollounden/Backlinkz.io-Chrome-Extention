@@ -1,11 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Backlinkz SEO Analyzer</title>
+  <title>Backlinkz SEO Checker Tool</title>
   <meta charset="utf-8">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
+    :root {
+      /* Dark Mode (Default) Variables */
+      --bg-gradient: linear-gradient(135deg, #0a0a0a 0%, #1a0f1a 50%, #2d0f2d 100%);
+      --text-color: #ffffff;
+      --text-secondary: #c0c0c0;
+      --container-bg: rgba(255, 255, 255, 0.02);
+      --section-bg: rgba(255, 255, 255, 0.03);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --header-bg: linear-gradient(135deg, #0a0a0a 0%, #1a0f1a 100%);
+      --header-border: rgba(214, 0, 95, 0.3);
+      --metric-border: rgba(255, 255, 255, 0.1);
+      --metric-label: #d0d0d0;
+      --input-bg: rgba(255, 255, 255, 0.05);
+      --input-border: rgba(255, 255, 255, 0.2);
+      --scrollbar-track: rgba(255, 255, 255, 0.05);
+      --heading-bg: rgba(255, 255, 255, 0.05);
+      --link-item-bg: rgba(255, 255, 255, 0.05);
+      --tooltip-bg: #1a1a1a;
+      --tooltip-text: #e0e0e0;
+      --tooltip-border: #d6005f;
+      --code-bg: #f5f5f7; /* Keep code light for readability or invert? Usually code is dark in dark mode, but let's stick to existing */
+      --code-text: #1a1a1a;
+    }
+
+    [data-theme="light"] {
+      --bg-gradient: linear-gradient(135deg, #f5f5f7 0%, #e1e1e6 100%);
+      --text-color: #1a1a1a;
+      --text-secondary: #555555;
+      --container-bg: rgba(255, 255, 255, 0.8);
+      --section-bg: rgba(255, 255, 255, 0.6);
+      --border-color: rgba(0, 0, 0, 0.1);
+      --header-bg: #ffffff;
+      --header-border: rgba(214, 0, 95, 0.2);
+      --metric-border: rgba(0, 0, 0, 0.05);
+      --metric-label: #555555;
+      --input-bg: #ffffff;
+      --input-border: rgba(0, 0, 0, 0.15);
+      --scrollbar-track: rgba(0, 0, 0, 0.05);
+      --heading-bg: rgba(0, 0, 0, 0.03);
+      --link-item-bg: rgba(0, 0, 0, 0.03);
+      --tooltip-bg: #ffffff;
+      --tooltip-text: #333333;
+      --tooltip-border: #d6005f;
+      --code-bg: #f0f0f0;
+      --code-text: #333333;
+    }
+
     * {
       box-sizing: border-box;
     }
@@ -15,10 +62,11 @@
       width: 580px;
       padding: 0;
       margin: 0;
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a0f1a 50%, #2d0f2d 100%);
-      color: #ffffff;
+      background: var(--bg-gradient);
+      color: var(--text-color);
       position: relative;
       overflow: hidden;
+      transition: background 0.3s ease, color 0.3s ease;
     }
     
     /* Background wave pattern */
@@ -42,19 +90,19 @@
       z-index: 1;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
       margin: 10px;
-      background: rgba(255, 255, 255, 0.02);
+      background: var(--container-bg);
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border-color);
     }
     
     .header {
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a0f1a 100%);
-      color: white;
+      background: var(--header-bg);
+      color: var(--text-color);
       padding: 20px;
       text-align: center;
-      border-bottom: 1px solid rgba(214, 0, 95, 0.3);
+      border-bottom: 1px solid var(--header-border);
       position: relative;
     }
     
@@ -83,27 +131,27 @@
       font-size: 13px;
       opacity: 1;
       font-weight: 400;
-      color: #c0c0c0;
+      color: var(--text-secondary);
     }
     
     .content {
       padding: 20px;
-      background: rgba(255, 255, 255, 0.02);
+      background: var(--container-bg);
     }
     
     .section {
       margin-bottom: 20px;
-      background: rgba(255, 255, 255, 0.03);
+      background: var(--section-bg);
       border-radius: 12px;
       padding: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
       backdrop-filter: blur(10px);
     }
     
     .section-title {
       font-weight: 600;
       margin-bottom: 16px;
-      color: #ffffff;
+      color: var(--text-color);
       font-size: 16px;
       display: flex;
       align-items: center;
@@ -120,7 +168,7 @@
       margin-bottom: 12px;
       font-size: 14px;
       padding: 8px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid var(--metric-border);
       align-items: flex-start;
     }
     
@@ -130,13 +178,13 @@
     
     .metric-label {
       font-weight: 500;
-      color: #d0d0d0;
+      color: var(--metric-label);
       min-width: 100px;
       flex-shrink: 0;
     }
     
     .metric-value {
-      color: #ffffff;
+      color: var(--text-color);
       font-weight: 500;
       word-break: normal;
       word-wrap: break-word;
@@ -178,10 +226,10 @@
     .tabs {
       display: flex;
       margin-bottom: 20px;
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--input-bg);
       border-radius: 10px;
       padding: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border-color);
     }
     
     .tab {
@@ -190,7 +238,7 @@
       padding: 12px 8px;
       background: transparent;
       cursor: pointer;
-      color: #b8b8b8;
+      color: var(--text-secondary);
       font-weight: 500;
       border-radius: 8px;
       transition: all 0.3s ease;
@@ -199,7 +247,7 @@
     }
     
     .tab:hover {
-      color: #ffffff;
+      color: var(--text-color);
       background: rgba(214, 0, 95, 0.1);
     }
     
@@ -239,23 +287,23 @@
     }
     
     .secondary-button {
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      background: var(--input-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     
     .secondary-button:hover {
-      background: rgba(255, 255, 255, 0.15);
-      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(214, 0, 95, 0.1);
+      border-color: rgba(214, 0, 95, 0.3);
     }
     
     .heading-item {
       margin-bottom: 12px;
       padding: 12px;
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--heading-bg);
+      border: 1px solid var(--border-color);
     }
     
     .link-item {
@@ -263,17 +311,17 @@
       font-size: 13px;
       padding: 12px;
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--link-item-bg);
+      border: 1px solid var(--border-color);
     }
     
     .footer {
       text-align: center;
       font-size: 12px;
-      color: #b8b8b8;
+      color: var(--text-secondary);
       margin-top: 20px;
       padding-top: 20px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-top: 1px solid var(--border-color);
     }
     
     .emoji {
@@ -289,7 +337,7 @@
     label {
       cursor: pointer;
       user-select: none;
-      color: #d0d0d0;
+      color: var(--metric-label);
     }
     
     label:hover {
@@ -304,7 +352,7 @@
     .filter-title {
       font-weight: 600;
       margin-bottom: 8px;
-      color: #ffffff;
+      color: var(--text-color);
     }
     
     .filter-checkboxes {
@@ -327,9 +375,9 @@
     }
     
     .footer-button {
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: var(--input-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
       padding: 8px 16px;
       border-radius: 6px;
       cursor: pointer;
@@ -339,8 +387,8 @@
     }
     
     .footer-button:hover {
-      background: rgba(255, 255, 255, 0.15);
-      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(214, 0, 95, 0.1);
+      border-color: rgba(214, 0, 95, 0.3);
     }
     
     /* Specific styles for URLs to prevent overflow */
@@ -423,13 +471,14 @@
     /* Character count styling for title and description */
     .char-count {
       display: inline-block;
-      background: rgba(255, 255, 255, 0.15);
-      color: #c8c8c8;
+      background: var(--input-bg);
+      color: var(--text-secondary);
       padding: 3px 8px;
       border-radius: 6px;
       font-size: 11px;
       font-weight: 600;
       margin-right: 8px;
+      border: 1px solid var(--border-color);
     }
     
     /* Fix for description, title, and keywords to prevent word breaks */
@@ -452,11 +501,11 @@
     input[type="text"] {
       width: 100%;
       padding: 10px 12px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid var(--input-border);
       border-radius: 8px;
       font-size: 13px;
-      background: rgba(255, 255, 255, 0.05);
-      color: #ffffff;
+      background: var(--input-bg);
+      color: var(--text-color);
       transition: all 0.3s ease;
     }
     
@@ -467,7 +516,7 @@
     }
     
     input[type="text"]::placeholder {
-      color: #a8a8a8;
+      color: var(--text-secondary);
     }
     
     /* Services link styling */
@@ -483,6 +532,10 @@
       color: #ffffff;
       text-decoration: underline;
     }
+
+    [data-theme="light"] .services-link:hover {
+      color: #d6005f;
+    }
     
     /* Scrollbar styling */
     ::-webkit-scrollbar {
@@ -490,7 +543,7 @@
     }
     
     ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--scrollbar-track);
       border-radius: 3px;
     }
     
@@ -532,7 +585,7 @@
       margin-top: 0;
       margin-bottom: 15px;
       font-size: 13px;
-      color: #b8b8b8;
+      color: var(--text-secondary);
     }
     
     .footer-buttons-margin {
@@ -558,16 +611,16 @@
       .metric-label,
       label,
       .subtitle {
-        color: #ffffff;
+        color: var(--text-color);
       }
       
       .section {
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        border: 2px solid var(--border-color);
       }
       
       button,
       .tab.active {
-        border: 2px solid #ffffff;
+        border: 2px solid var(--text-color);
       }
     }
     
@@ -582,6 +635,90 @@
       }
     }
     
+    /* Tooltip Styles */
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      margin-left: 6px;
+      cursor: help;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 50%;
+      font-size: 10px;
+      font-family: serif;
+      font-style: italic;
+      font-weight: bold;
+      position: relative;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    .info-icon:hover {
+      color: var(--text-color);
+      border-color: #d6005f;
+      background: rgba(214, 0, 95, 0.2);
+    }
+
+    .info-icon:hover::after {
+      content: attr(data-tooltip);
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 260px;
+      padding: 16px;
+      background: var(--tooltip-bg);
+      border: 1px solid var(--tooltip-border);
+      border-radius: 8px;
+      color: var(--tooltip-text);
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 1.5;
+      text-align: left;
+      z-index: 9999;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      pointer-events: none;
+      white-space: normal;
+    }
+    
+    /* Theme Toggle Button */
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      color: var(--text-color);
+    }
+    
+    .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+    
+    [data-theme="light"] .theme-toggle {
+      background: rgba(0, 0, 0, 0.05);
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+    
+    [data-theme="light"] .theme-toggle:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
     /* Additional visual indicator for Nav links */
     .nav-indicator {
       display: inline-block;
@@ -611,8 +748,9 @@
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo">Backlinkz SEO Analyzer</div>
-      <div class="subtitle">Analyze any webpage for SEO metrics</div>
+      <div class="logo">Backlinkz SEO Checker Tool</div>
+      <div class="subtitle">Comprehensive SEO Checker Tool & Analyzer</div>
+      <button id="theme-toggle" class="theme-toggle" title="Toggle Light/Dark Mode">🌙</button>
     </div>
     <div class="content">
       <div class="tabs">
@@ -630,36 +768,51 @@
         <div class="section">
           <div class="section-title"><span class="emoji">📝</span> <span>Meta Info</span></div>
           <div class="metric">
-            <div class="metric-label">Title </div>
+            <div class="metric-label">Site Title <span class="info-icon" data-tooltip="The name of the website or brand, usually defined by the og:site_name tag.">i</span></div>
+            <div class="metric-value" id="site-title">Loading...</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Meta Title <span class="info-icon" data-tooltip="The blue clickable headline in Google search results. It is the single most important on-page SEO factor. Keep it under 60 characters to avoid being cut off (truncated) with '...'. Ideally, your main keyword should appear near the start.">i</span></div>
             <div class="metric-value" id="title-length">Loading...</div>
           </div>
           <div class="metric">
-            <div class="metric-label">Description</div>
+            <div class="metric-label">Meta Description <span class="info-icon" data-tooltip="The short paragraph shown under the title in search results. It doesn't directly affect rankings, but a good one acts like an ad copy to improve your Click-Through Rate (CTR). Keep it between 150-160 characters and include a Call-to-Action.">i</span></div>
             <div class="metric-value" id="description-length">Loading...</div>
           </div>
           <div class="metric">
-            <div class="metric-label">URL</div>
+            <div class="metric-label">URL <span class="info-icon" data-tooltip="The address of your page. Short, descriptive URLs are easier for both humans and search engines to read. Avoid long strings of random numbers or parameters (like ?id=123) if possible. Keywords in the URL are a minor ranking signal.">i</span></div>
             <div class="metric-value" id="url">Loading...</div>
           </div>
           <div class="metric">
-            <div class="metric-label">Canonical</div>
+            <div class="metric-label">Canonical <span class="info-icon" data-tooltip="The 'Master Copy' tag. If you have multiple URLs with similar content (like a print version or sorting options), this tag tells Google which one is the main version to index. This prevents 'Duplicate Content' penalties and consolidates ranking power to one page.">i</span></div>
             <div class="metric-value" id="canonical">Loading...</div>
           </div>
           <div class="metric">
-            <div class="metric-label">Robots Tag</div>
+            <div class="metric-label">Robots Tag <span class="info-icon" data-tooltip="Instructions for search engine crawlers. 'index' allows the page to appear in Google. 'noindex' hides it. 'follow' lets crawlers follow links on the page to find other content. 'nofollow' stops them from passing authority (link juice) through links.">i</span></div>
             <div class="metric-value" id="robots">Loading...</div>
           </div>
           <div class="metric">
-            <div class="metric-label">Word Count</div>
+            <div class="metric-label">Word Count <span class="info-icon" data-tooltip="The total amount of text on the page. While there is no perfect number, 'thin content' (very few words) often struggles to rank. Search engines look for comprehensive coverage of a topic. Ensure you answer the user's question thoroughly.">i</span></div>
             <div class="metric-value" id="word-count">Loading...</div>
           </div>
           <div class="metric">
-            <div class="metric-label">Lang</div>
+            <div class="metric-label">Lang <span class="info-icon" data-tooltip="The declared language of the page (e.g., 'en-US'). This helps browsers offer translation tools and helps search engines ensure they are showing your English page to English speakers, not Spanish speakers.">i</span></div>
             <div class="metric-value" id="lang">Loading...</div>
           </div>
           <div class="metric">
-            <div class="metric-label">Keywords </div>
+            <div class="metric-label">Keywords <span class="info-icon" data-tooltip="The 'Meta Keywords' tag. Google has officially ignored this tag since 2009 because people abused it. It is generally safe to ignore, but some minor directories or internal site search engines might still use it.">i</span></div>
             <div class="metric-value" id="keywords">Loading...</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Tech Stack <span class="info-icon" data-tooltip="The underlying technology powering this website (e.g., WordPress, Next.js, Shopify). Knowing this helps you understand technical SEO limitations and capabilities.">i</span></div>
+            <div class="metric-value" id="tech-stack">Loading...</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Rendering <span class="info-icon" data-tooltip="SSR (Server-Side Rendering) is best for public SEO as Google sees content immediately. CSR (Client-Side Rendering) builds content in the browser—ideal for private dashboards or apps behind logins, but can be risky for public ranking.">i</span></div>
+            <div class="metric-value" id="rendering-mode">Loading...</div>
+          </div>
+          <div class="button-group" style="margin-bottom: 15px;">
+            <button id="check-google-render" class="secondary-button" style="width: 100%;">👁️ Check How Google Renders This Page</button>
           </div>
           <div class="section">
             <div class="section-title"><span class="emoji">🚀</span> <span>External Analysis (Ahrefs)</span></div>
@@ -676,7 +829,7 @@
       
       <div id="headings" class="tab-content">
         <div class="section">
-          <div class="section-title"><span class="emoji">📋</span> <span>Headings Structure</span></div>
+          <div class="section-title"><span class="emoji">📋</span> <span>Headings Structure</span> <span class="info-icon" data-tooltip="The outline of your content. H1 is your book title (use only one!). H2s are chapters, H3s are sub-sections. Search engines use these to understand what your content covers. Skimming users read these first, so make them descriptive.">i</span></div>
           <div class="metric">
             <div class="metric-label">H1</div>
             <div class="metric-value" id="h1-count">Loading...</div>
@@ -711,7 +864,7 @@
       
       <div id="links" class="tab-content">
         <div class="section">
-          <div class="section-title"><span class="emoji">🔗</span> <span>Links Analysis</span></div>
+          <div class="section-title"><span class="emoji">🔗</span> <span>Links Analysis</span> <span class="info-icon" data-tooltip="Links act like votes of confidence. Internal links help users navigate your own site and spread authority. External links connect to other sites. 'DoFollow' links pass SEO ranking power. 'NoFollow' links tell Google to ignore the connection (often used for paid ads or comments).">i</span></div>
           <div class="metric">
             <div class="metric-label">Total Links</div>
             <div class="metric-value" id="total-links">Loading...</div>
@@ -777,7 +930,7 @@
       
       <div id="images" class="tab-content">
         <div class="section">
-          <div class="section-title"><span class="emoji">🖼️</span> <span>Images Analysis</span></div>
+          <div class="section-title"><span class="emoji">🖼️</span> <span>Images Analysis</span> <span class="info-icon" data-tooltip="Alt Text (Alternative Text) describes an image to search engines and screen readers. 'Title' shows on hover. Rendered Size vs Natural Size helps identify oversized images slowing down your site. 'Lazy' loading improves initial page speed.">i</span></div>
           <div class="metric">
             <div class="metric-label">Total Images</div>
             <div class="metric-value" id="total-images">Loading...</div>
@@ -789,6 +942,7 @@
           <div class="button-group">
             <button id="copy-image-links">Copy Image Links</button>
             <button id="visualize-missing-alt" class="secondary-button" style="border-color: #ff6b6b; color: #ff6b6b;">👁️ Highlight Missing Alt</button>
+            <button id="visualize-alt-text" class="secondary-button" style="border-color: #339af0; color: #339af0;">👁️ Show Alt Text</button>
           </div>
           <div id="images-list" class="list-container"></div>
         </div>
@@ -796,18 +950,18 @@
       
       <div id="social" class="tab-content">
         <div class="section">
-          <div class="section-title"><span class="emoji">📱</span> <span>Open Graph</span></div>
+          <div class="section-title"><span class="emoji">📱</span> <span>Open Graph</span> <span class="info-icon" data-tooltip="A protocol used by Facebook, LinkedIn, and others. These tags (og:image, og:title) determine exactly how your link looks when someone shares it. A well-optimized preview card gets significantly more clicks from social media feeds.">i</span></div>
           <div id="og-data"></div>
         </div>
         <div class="section">
-          <div class="section-title"><span class="emoji">🐦</span> <span>Twitter Card</span></div>
+          <div class="section-title"><span class="emoji">🐦</span> <span>Twitter Card</span> <span class="info-icon" data-tooltip="Similar to Open Graph, but specifically for Twitter (X). It allows you to choose between a 'Summary' card (small image) or 'Large Image' card to grab attention in the Twitter timeline.">i</span></div>
           <div id="twitter-data"></div>
         </div>
       </div>
       
       <div id="schema" class="tab-content">
         <div class="section">
-          <div class="section-title"><span class="emoji">🔍</span> <span>Schema.org Markup</span></div>
+          <div class="section-title"><span class="emoji">🔍</span> <span>Schema.org Markup</span> <span class="info-icon" data-tooltip="Structured Data (JSON-LD). This is code that speaks Google's native language. It explicitly tells Google 'This is a Recipe', 'This is a Product', or 'This is a Review'. This helps you get Rich Results (stars, prices, images) directly in search results.">i</span></div>
           <div class="metric">
             <div class="metric-label">Schema Count</div>
             <div class="metric-value" id="schema-count">Loading...</div>
@@ -822,7 +976,7 @@
       
       <div id="hreflang" class="tab-content">
         <div class="section">
-          <div class="section-title"><span class="emoji">🌐</span> <span>Hreflang Tags</span></div>
+          <div class="section-title"><span class="emoji">🌐</span> <span>Hreflang Tags</span> <span class="info-icon" data-tooltip="Essential for international SEO. If you have an English page and a Spanish page, Hreflang tells Google 'Show this one to users in Mexico'. It prevents duplicate content issues between different regional versions of the same language (e.g., en-US vs en-GB).">i</span></div>
           <div class="metric">
             <div class="metric-label">Total Hreflang Tags</div>
             <div class="metric-value" id="hreflang-count">Loading...</div>
@@ -877,11 +1031,11 @@
             <div class="metric-value" id="business-coordinates">Loading...</div>
           </div>
           <div class="metric">
-            <div class="metric-label">KG ID:</div>
+            <div class="metric-label">KG ID: <span class="info-icon" data-tooltip="Knowledge Graph ID. This is Google's internal database code for a specific entity (Person, Place, or Brand). Linking to this explicitly tells Google 'This page is about THIS specific entity', helping to disambiguate names.">i</span></div>
             <div class="metric-value" id="kg-id">Loading...</div>
           </div>
           <div class="metric">
-            <div class="metric-label">Map Embed Code:</div>
+            <div class="metric-label">Map Embed Code: <span class="info-icon" data-tooltip="The iframe HTML code. Adding this to your contact page is a strong local SEO signal. It confirms your physical location to Google and allows users to get directions without leaving your site.">i</span></div>
             <div class="metric-value" id="map-embed">Loading...</div>
           </div>
           <button id="copy-map-code">Copy Map Code</button>

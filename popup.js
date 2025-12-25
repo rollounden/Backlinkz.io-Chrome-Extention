@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('copy-business-info').addEventListener('click', copyBusinessInfo);
   document.getElementById('copy-map-code').addEventListener('click', copyMapCode);
   document.getElementById('copy-meta-info').addEventListener('click', copyMetaInfo);
+  document.getElementById('check-google-render').addEventListener('click', testRichResults);
 
   // External Analysis Buttons (Ahrefs)
   document.getElementById('ahrefs-backlinks').addEventListener('click', function() {
@@ -44,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Set up Visualization buttons
   document.getElementById('visualize-headings').addEventListener('click', visualizeHeadings);
   document.getElementById('visualize-missing-alt').addEventListener('click', visualizeMissingAlt);
+  document.getElementById('visualize-alt-text').addEventListener('click', visualizeAltText);
   document.getElementById('visualize-links').addEventListener('click', visualizeLinks);
   
   // Set up Rich Results Test buttons
@@ -118,7 +120,49 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   });
+
+  // Initialize Theme
+  initTheme();
 });
+
+function initTheme() {
+  const toggleBtn = document.getElementById('theme-toggle');
+  const savedTheme = localStorage.getItem('backlinkz_theme');
+  
+  // Check for system preference if no saved theme
+  const systemPrefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+  
+  let currentTheme = 'dark';
+  
+  if (savedTheme) {
+    currentTheme = savedTheme;
+  } else if (systemPrefersLight) {
+    currentTheme = 'light';
+  }
+  
+  // Apply initial theme
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  updateThemeIcon(currentTheme);
+  
+  // Event listener for toggle
+  toggleBtn.addEventListener('click', function() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const newTheme = current === 'light' ? 'dark' : 'light';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('backlinkz_theme', newTheme);
+    updateThemeIcon(newTheme);
+  });
+}
+
+function updateThemeIcon(theme) {
+  const toggleBtn = document.getElementById('theme-toggle');
+  if (theme === 'light') {
+    toggleBtn.textContent = '☀️';
+  } else {
+    toggleBtn.textContent = '🌙';
+  }
+}
 
 function analyzeCurrentPage() {
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
@@ -281,6 +325,182 @@ function getPageData() {
   const bodyText = document.body.innerText || '';
   data.wordCount = bodyText.split(/\s+/).filter(word => word.length > 0).length;
   
+  // Tech Stack & Rendering Detection
+  data.tech = {
+    rendering: 'Unknown',
+    framework: 'Unknown'
+  };
+
+  try {
+    // Framework Detection (Order matters: check most specific first)
+    
+    // Static Site Generators (SSG) - Check first as they're most specific
+    if (document.querySelector('meta[name="generator"][content*="Gatsby"]') || window.___gatsby) {
+      data.tech.framework = 'Gatsby (React SSG)';
+      data.tech.rendering = 'SSG (Static)';
+    } else if (document.querySelector('meta[name="generator"][content*="Astro"]') || document.querySelector('script[type="module"][src*="astro"]')) {
+      data.tech.framework = 'Astro';
+      data.tech.rendering = 'SSG / SSR (Hybrid)';
+    } else if (document.querySelector('meta[name="generator"][content*="Jekyll"]')) {
+      data.tech.framework = 'Jekyll';
+      data.tech.rendering = 'SSG (Static)';
+    } else if (document.querySelector('meta[name="generator"][content*="Hugo"]')) {
+      data.tech.framework = 'Hugo';
+      data.tech.rendering = 'SSG (Static)';
+    } else if (document.querySelector('meta[name="generator"][content*="Eleventy"]') || document.querySelector('meta[name="generator"][content*="11ty"]')) {
+      data.tech.framework = 'Eleventy (11ty)';
+      data.tech.rendering = 'SSG (Static)';
+    }
+    
+    // Modern JS Frameworks (SSR/SSG)
+    else if (document.getElementById('__NEXT_DATA__') || document.querySelector('script[src*="_next/static"]')) {
+      data.tech.framework = 'Next.js (React)';
+      data.tech.rendering = 'SSR / SSG';
+    } else if (window.__NUXT__ || document.querySelector('script[src*="_nuxt/"]')) {
+      data.tech.framework = 'Nuxt.js (Vue)';
+      data.tech.rendering = 'SSR / SSG';
+    } else if (document.querySelector('[data-gatsby-root]')) {
+      data.tech.framework = 'Gatsby (React SSG)';
+      data.tech.rendering = 'SSG (Static)';
+    }
+    
+    // E-commerce Platforms
+    else if (window.Shopify || document.querySelector('script[src*="cdn.shopify.com"]')) {
+      data.tech.framework = 'Shopify';
+      data.tech.rendering = 'SSR (Liquid)';
+    } else if (document.querySelector('meta[name="generator"][content*="BigCommerce"]') || window.BigCommerce) {
+      data.tech.framework = 'BigCommerce';
+      data.tech.rendering = 'SSR';
+    } else if (document.querySelector('meta[name="generator"][content*="Magento"]') || document.body.className.includes('catalog-product')) {
+      data.tech.framework = 'Magento';
+      data.tech.rendering = 'SSR (PHP)';
+    } else if (document.querySelector('meta[name="generator"][content*="PrestaShop"]') || window.prestashop) {
+      data.tech.framework = 'PrestaShop';
+      data.tech.rendering = 'SSR (PHP)';
+    } else if (document.querySelector('meta[name="generator"][content*="OpenCart"]') || document.querySelector('link[href*="catalog/view/theme"]')) {
+      data.tech.framework = 'OpenCart';
+      data.tech.rendering = 'SSR (PHP)';
+    } else if (document.querySelector('meta[name="generator"][content*="WooCommerce"]') || document.body.className.includes('woocommerce')) {
+      data.tech.framework = 'WooCommerce (WordPress)';
+      data.tech.rendering = 'SSR (PHP)';
+    }
+    
+    // CMS Platforms
+    else if (document.querySelector('meta[name="generator"][content*="WordPress"]') || document.querySelector('link[href*="wp-content"]')) {
+      data.tech.framework = 'WordPress';
+      data.tech.rendering = 'SSR (PHP)';
+    } else if (document.querySelector('meta[name="generator"][content*="Drupal"]') || document.body.className.includes('drupal')) {
+      data.tech.framework = 'Drupal';
+      data.tech.rendering = 'SSR (PHP)';
+    } else if (document.querySelector('meta[name="generator"][content*="Joomla"]') || window.Joomla) {
+      data.tech.framework = 'Joomla';
+      data.tech.rendering = 'SSR (PHP)';
+    } else if (document.querySelector('meta[name="generator"][content*="Ghost"]') || document.querySelector('meta[name="generator"][content*="ghost"]')) {
+      data.tech.framework = 'Ghost';
+      data.tech.rendering = 'SSR (Node.js)';
+    } else if (document.querySelector('meta[name="generator"][content*="HubSpot"]') || document.getElementById('hs-script-loader')) {
+      data.tech.framework = 'HubSpot CMS';
+      data.tech.rendering = 'SSR';
+    } else if (document.querySelector('meta[name="generator"][content*="Blogger"]') || document.body.className.includes('blogger')) {
+      data.tech.framework = 'Blogger';
+      data.tech.rendering = 'SSR';
+    } else if (document.querySelector('meta[property="al:ios:app_name"][content="Medium"]') || document.querySelector('meta[name="twitter:app:name:iphone"][content="Medium"]')) {
+      data.tech.framework = 'Medium';
+      data.tech.rendering = 'SSR (Node.js)';
+    }
+    
+    // Forum Platforms
+    else if (document.body.className.includes('XenForo') || document.querySelector('html[data-template]') || document.querySelector('meta[property="og:site_name"][content*="XenForo"]')) {
+      data.tech.framework = 'XenForo';
+      data.tech.rendering = 'SSR (PHP Forum)';
+    } else if (document.querySelector('meta[name="generator"][content*="vBulletin"]') || window.vBulletin) {
+      data.tech.framework = 'vBulletin';
+      data.tech.rendering = 'SSR (PHP Forum)';
+    } else if (document.querySelector('meta[name="generator"][content*="phpBB"]') || document.body.id === 'phpbb') {
+      data.tech.framework = 'phpBB';
+      data.tech.rendering = 'SSR (PHP Forum)';
+    } else if (document.querySelector('meta[name="discourse-version"]') || document.querySelector('meta[name="generator"][content*="Discourse"]')) {
+      data.tech.framework = 'Discourse';
+      data.tech.rendering = 'SSR (Ruby/Ember)';
+    } else if (document.querySelector('meta[name="generator"][content*="MyBB"]') || document.body.id === 'mybb') {
+      data.tech.framework = 'MyBB';
+      data.tech.rendering = 'SSR (PHP Forum)';
+    } else if (document.querySelector('meta[name="generator"][content*="Flarum"]') || document.getElementById('flarum-loading')) {
+      data.tech.framework = 'Flarum';
+      data.tech.rendering = 'CSR (PHP/Mithril)';
+    } else if (document.querySelector('meta[name="application-name"][content*="Vanilla"]') || window.gdn) {
+      data.tech.framework = 'Vanilla Forums';
+      data.tech.rendering = 'SSR (PHP)';
+    }
+    
+    // Website Builders & Landing Pages
+    else if (document.querySelector('meta[name="generator"][content*="Wix"]') || document.getElementById('SITE_CONTAINER')) {
+      data.tech.framework = 'Wix';
+      data.tech.rendering = 'SSR';
+    } else if (document.querySelector('meta[name="generator"][content*="Squarespace"]')) {
+      data.tech.framework = 'Squarespace';
+      data.tech.rendering = 'SSR';
+    } else if (document.querySelector('meta[name="generator"][content*="Webflow"]') || document.body.className.includes('w-mod')) {
+      data.tech.framework = 'Webflow';
+      data.tech.rendering = 'Static / SSR';
+    } else if (document.querySelector('meta[name="generator"][content*="Weebly"]') || window.Weebly) {
+      data.tech.framework = 'Weebly';
+      data.tech.rendering = 'SSR';
+    } else if (document.querySelector('meta[name="generator"][content*="Framer"]') || document.querySelector('[data-framer-page-optimized]')) {
+      data.tech.framework = 'Framer';
+      data.tech.rendering = 'SSR (React)';
+    } else if (document.querySelector('meta[name="generator"][content*="Carrd"]') || document.body.className.includes('carrd')) {
+      data.tech.framework = 'Carrd';
+      data.tech.rendering = 'Static';
+    } else if (document.querySelector('meta[name="generator"][content*="ClickFunnels"]') || window.cfPageURL) {
+      data.tech.framework = 'ClickFunnels';
+      data.tech.rendering = 'SSR';
+    }
+    
+    // Course & Membership Platforms
+    else if (document.querySelector('meta[property="al:ios:app_name"][content="Kajabi"]') || window.Kajabi) {
+      data.tech.framework = 'Kajabi';
+      data.tech.rendering = 'SSR';
+    } else if (document.querySelector('meta[name="generator"][content*="Teachable"]') || window.teachableAnalytics) {
+      data.tech.framework = 'Teachable';
+      data.tech.rendering = 'SSR';
+    }
+    
+    // Backend Frameworks (detectable patterns)
+    else if (document.querySelector('meta[name="csrf-token"]') && document.querySelector('script[src*="/js/app"]')) {
+      data.tech.framework = 'Laravel (PHP)';
+      data.tech.rendering = 'SSR (PHP)';
+    } else if (document.querySelector('input[name="csrfmiddlewaretoken"]') || document.querySelector('[data-django]')) {
+      data.tech.framework = 'Django (Python)';
+      data.tech.rendering = 'SSR (Python)';
+    } else if (document.querySelector('meta[name="csrf-token"]') && document.querySelector('script[src*="/assets/application"]')) {
+      data.tech.framework = 'Ruby on Rails';
+      data.tech.rendering = 'SSR (Ruby)';
+    }
+    
+    // Generic JS Frameworks (CSR)
+    else if (document.querySelector('[data-reactroot]') || document.querySelector('[data-react-helmet]')) {
+      data.tech.framework = 'React';
+      data.tech.rendering = 'CSR (Client-Side)';
+    } else if (document.querySelector('[data-v-app]') || document.querySelector('[data-vue]')) {
+      data.tech.framework = 'Vue.js';
+      data.tech.rendering = 'CSR (Client-Side)';
+    } else if (window.angular || document.querySelector('[ng-app]') || document.querySelector('[ng-version]')) {
+      data.tech.framework = 'Angular';
+      data.tech.rendering = 'CSR (Client-Side)';
+    }
+    
+    // Fallback
+    else {
+      data.tech.framework = 'HTML / Other';
+      data.tech.rendering = 'Static / SSR';
+    }
+  } catch (e) {
+    console.log('Error detecting tech stack:', e);
+    data.tech.framework = 'Detection Failed';
+    data.tech.rendering = 'Unknown';
+  }
+
   // Headings
   data.headings = {};
   for (let i = 1; i <= 6; i++) {
@@ -362,6 +582,7 @@ function getPageData() {
   allImages.forEach(img => {
     const alt = img.alt || '';
     const src = img.src || '';
+    const title = img.title || '';
     
     if (!alt) {
       data.images.missing_alt++;
@@ -370,7 +591,13 @@ function getPageData() {
     data.images.items.push({
       src: src,
       alt: alt,
-      hasAlt: alt.length > 0
+      title: title,
+      hasAlt: alt.length > 0,
+      width: img.width,     // Rendered width
+      height: img.height,   // Rendered height
+      naturalWidth: img.naturalWidth, // Actual image width
+      naturalHeight: img.naturalHeight, // Actual image height
+      loading: img.loading || 'eager'
     });
   });
   
@@ -877,9 +1104,18 @@ function displayResults(results) {
   // Store the data globally for the copy function to use
   window.pageData = data;
   
-// Overview tab
-document.getElementById('title-length').innerHTML = `<span class="char-count">${data.title.length} characters</span>${data.title}`;
-document.getElementById('description-length').innerHTML = data.description ? 
+  // Overview tab
+  // Site Title
+  const siteTitleElement = document.getElementById('site-title');
+  if (data.ogData && data.ogData.site_name) {
+    siteTitleElement.textContent = data.ogData.site_name;
+    siteTitleElement.classList.remove('missing');
+  } else {
+    siteTitleElement.innerHTML = '<span class="missing">Missing</span>';
+  }
+
+  document.getElementById('title-length').innerHTML = `<span class="char-count">${data.title.length} characters</span>${data.title}`;
+  document.getElementById('description-length').innerHTML = data.description ? 
   `<span class="char-count">${data.description.length} characters</span>${data.description}` : 
   '<span class="missing">Missing</span>';
   
@@ -906,6 +1142,16 @@ document.getElementById('description-length').innerHTML = data.description ?
   `<span style="margin-right: 6px;"></span>${data.keywords}` : 
   '<span class="missing">Missing</span>';
 
+  // Tech Stack Display
+  const techStackEl = document.getElementById('tech-stack');
+  const renderingModeEl = document.getElementById('rendering-mode');
+  
+  if (techStackEl && data.tech) {
+    techStackEl.textContent = data.tech.framework || 'Unknown';
+  }
+  if (renderingModeEl && data.tech) {
+    renderingModeEl.textContent = data.tech.rendering || 'Unknown';
+  }
   
   // Headings tab
   for (let i = 1; i <= 6; i++) {
@@ -970,8 +1216,30 @@ document.getElementById('description-length').innerHTML = data.description ?
   data.images.items.forEach(image => {
     const imageItem = document.createElement('div');
     imageItem.className = 'link-item';
-    imageItem.innerHTML = `<div><strong>Alt:</strong> ${image.hasAlt ? image.alt : '<span class="missing">Missing</span>'}</div>
-                           <div>${image.src}</div>`;
+    
+    // Calculate dimension info
+    let dimInfo = `${image.width}x${image.height}`;
+    let dimStyle = '';
+    
+    // Highlight if image is significantly scaled down (performance issue)
+    if (image.naturalWidth > 0 && (image.width < image.naturalWidth / 1.5)) {
+      dimInfo += ` (Natural: ${image.naturalWidth}x${image.naturalHeight})`;
+      dimStyle = 'color: #ff9800; font-weight: 500;'; // Orange warning for oversized images
+    } else if (image.naturalWidth > 0) {
+      dimInfo += ` (Natural: ${image.naturalWidth}x${image.naturalHeight})`;
+    }
+    
+    imageItem.innerHTML = `
+      <div style="margin-bottom: 6px;">
+        <strong>Alt:</strong> ${image.hasAlt ? image.alt : '<span class="missing">Missing</span>'}
+      </div>
+      ${image.title ? `<div style="margin-bottom: 4px; font-size: 12px; color: var(--text-color);"><strong>Title:</strong> ${image.title}</div>` : ''}
+      <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; display: flex; gap: 15px;">
+        <span style="${dimStyle}" title="Rendered Size (Actual File Size)">📏 ${dimInfo}</span>
+        <span title="Loading Attribute">⚡ ${image.loading}</span>
+      </div>
+      <div style="font-size: 11px; color: #4fc3f7; word-break: break-all;">${image.src}</div>
+    `;
     imagesList.appendChild(imageItem);
   });
   
@@ -1576,109 +1844,151 @@ function exportAllSeoData() {
   try {
     const data = window.pageData;
     let csvContent = '';
+    // 1. Add BOM for Excel compatibility
+    csvContent += '\uFEFF'; 
 
     // Get page name from URL for the filename
     const pageUrl = new URL(data.url);
     const pageName = pageUrl.hostname.replace(/[^a-z0-9]/gi, '_');
 
-    // Basic SEO Data
-    csvContent += 'PAGE SEO METRICS AND META INFORMATION\n';
-    csvContent += 'Metric,Value\n';
-    csvContent += `Title,\"${data.title.replace(/"/g, '""')}\"\n`;
-    csvContent += `Title Length,${data.title.length}\n`;
-    csvContent += `Description,\"${(data.description || '').replace(/"/g, '""')}\"\n`;
-    csvContent += `Description Length,${data.description ? data.description.length : 0}\n`;
-    csvContent += `URL,\"${data.url}\"\n`;
-    csvContent += `Canonical URL,\"${data.canonical || ''}\"\n`;
-    csvContent += `Robots Directive,\"${data.robots || ''}\"\n`;
-    csvContent += `Meta Keywords,\"${(data.keywords || '').replace(/"/g, '""')}\"\n`;
-    csvContent += `Word Count,${data.wordCount}\n\n`;
-
-    // Add content section after meta information and before headings
-    csvContent += '\nPAGE CONTENT ANALYSIS\n';
-    
-    // Main content if found
-    if (data.content.mainContent) {
-      csvContent += 'MAIN TAG CONTENT\n';
-      csvContent += 'Content\n';
-      csvContent += `\"${data.content.mainContent.replace(/"/g, '""')}\"\n\n`;
-    }
-
-    // Article content if found
-    if (data.content.articleContent) {
-      csvContent += 'ARTICLE TAG CONTENT\n';
-      csvContent += 'Content\n';
-      csvContent += `\"${data.content.articleContent.replace(/"/g, '""')}\"\n\n`;
-    }
-
-    // Paragraphs
-    csvContent += 'PARAGRAPH CONTENT\n';
-    csvContent += 'Paragraph Number,Content\n';
-    data.content.paragraphs.forEach((paragraph, index) => {
-      if (paragraph.trim()) {
-        csvContent += `${index + 1},\"${paragraph.replace(/"/g, '""')}\"\n`;
+    // --- Helper to escape CSV fields ---
+    const escape = (text) => {
+      if (text === null || text === undefined) return '';
+      const stringText = String(text);
+      // If the field contains quotes, commas, or newlines, enclose in quotes and double internal quotes
+      if (stringText.includes('"') || stringText.includes(',') || stringText.includes('\n')) {
+        return `"${stringText.replace(/"/g, '""')}"`;
       }
-    });
+      return stringText;
+    };
+
+    // --- Logic for Scoring/Status ---
+    const getStatus = (condition, warningCondition = false) => {
+      if (condition) return 'PASS';
+      if (warningCondition) return 'WARNING';
+      return 'ERROR';
+    };
+
+    // --- SECTION 1: SUMMARY SCORECARD ---
+    csvContent += 'BACKLINKZ SEO CHECKER TOOL REPORT\n';
+    csvContent += `Generated on,${new Date().toLocaleString()}\n`;
+    csvContent += `URL,${escape(data.url)}\n\n`;
+
+    csvContent += '### AUDIT SUMMARY ###\n';
+    csvContent += 'Category,Metric,Value,Status,Recommendation\n';
+
+    // Title Check
+    const titleLen = data.title.length;
+    const titleStatus = getStatus(titleLen > 10 && titleLen <= 60, titleLen > 60 || titleLen > 0);
+    let titleRec = 'Good title length.';
+    if (titleLen === 0) titleRec = 'Add a title tag.';
+    else if (titleLen > 60) titleRec = 'Title is too long (keep under 60 chars).';
+    else if (titleLen <= 10) titleRec = 'Title is too short.';
+    csvContent += `Meta,Meta Title Length,${titleLen} chars,${titleStatus},${escape(titleRec)}\n`;
+
+    // Description Check
+    const descLen = data.description ? data.description.length : 0;
+    const descStatus = getStatus(descLen >= 120 && descLen <= 160, descLen > 0);
+    let descRec = 'Good description length.';
+    if (descLen === 0) descRec = 'Add a meta description.';
+    else if (descLen < 120) descRec = 'Description is too short (aim for 150-160 chars).';
+    else if (descLen > 160) descRec = 'Description is too long.';
+    csvContent += `Meta,Meta Description Length,${descLen} chars,${descStatus},${escape(descRec)}\n`;
+
+    // H1 Check
+    const h1Count = data.headings.h1.count;
+    const h1Status = getStatus(h1Count === 1, h1Count > 0);
+    let h1Rec = 'Perfect. One H1 found.';
+    if (h1Count === 0) h1Rec = 'Missing H1 tag.';
+    else if (h1Count > 1) h1Rec = `Multiple H1 tags found (${h1Count}). Use only one.`;
+    csvContent += `Content,H1 Count,${h1Count},${h1Status},${escape(h1Rec)}\n`;
+
+    // Image Alt Check
+    const totalImg = data.images.total;
+    const missingAlt = data.images.missing_alt;
+    const altStatus = getStatus(missingAlt === 0, missingAlt < (totalImg * 0.1)); // Warning if < 10% missing
+    let altRec = 'All images have alt text.';
+    if (missingAlt > 0) altRec = `Found ${missingAlt} images missing alt text.`;
+    csvContent += `Images,Missing Alt Text,${missingAlt}/${totalImg},${altStatus},${escape(altRec)}\n`;
+
+    // Link Check
+    const brokenLinks = 0; // We don't have a broken link checker yet, placeholder
+    // csvContent += `Links,Broken Links,${brokenLinks},${getStatus(brokenLinks === 0)},Check for 404 errors.\n`;
+
     csvContent += '\n';
 
-    // Headings
-    csvContent += 'PAGE HEADING STRUCTURE AND HIERARCHY\n';
-    csvContent += 'Heading Type,Total Count,Heading Text\n';
+    // --- SECTION 2: DETAILED META INFO ---
+    csvContent += '### DETAILED META INFORMATION ###\n';
+    csvContent += 'Element,Content\n';
+    if (data.ogData && data.ogData.site_name) {
+      csvContent += `Site Title,${escape(data.ogData.site_name)}\n`;
+    }
+    csvContent += `Meta Title,${escape(data.title)}\n`;
+    csvContent += `Meta Description,${escape(data.description || '')}\n`;
+    csvContent += `Canonical,${escape(data.canonical || 'Missing')}\n`;
+    csvContent += `Robots,${escape(data.robots || 'Missing')}\n`;
+    csvContent += `Keywords,${escape(data.keywords || '')}\n`;
+    csvContent += `Language,${escape(data.lang)}\n`;
+    csvContent += `Word Count,${data.wordCount}\n`;
+    csvContent += `Tech Stack,${escape(data.tech.framework)}\n`;
+    csvContent += `Rendering Mode,${escape(data.tech.rendering)}\n`;
+    csvContent += '\n';
+
+    // --- SECTION 3: HEADINGS STRUCTURE ---
+    csvContent += '### HEADINGS STRUCTURE ###\n';
+    csvContent += 'Level,Text\n';
     for (let i = 1; i <= 6; i++) {
       const headings = data.headings[`h${i}`];
       if (headings.count > 0) {
         headings.items.forEach(heading => {
-          csvContent += `H${i},${headings.count},\"${heading.replace(/"/g, '""')}\"\n`;
+          csvContent += `H${i},${escape(heading)}\n`;
         });
       }
     }
     csvContent += '\n';
 
-    // Links
-    csvContent += 'PAGE LINK ANALYSIS AND DISTRIBUTION\n';
-    csvContent += 'Link Category,Link Text,Destination URL\n';
-    data.links.items.forEach(link => {
-      csvContent += `${link.isInternal ? 'Internal' : 'External'},\"${link.anchor.replace(/"/g, '""')}","${link.url}"\n`;
-    });
-    csvContent += '\n';
-
-    // Images
-    csvContent += 'IMAGE ACCESSIBILITY AND SOURCE ANALYSIS\n';
-    csvContent += 'Image Source URL,Alternative Text\n';
+    // --- SECTION 4: IMAGE ANALYSIS ---
+    csvContent += '### IMAGE ANALYSIS ###\n';
+    csvContent += 'Status,Alt Text,Source URL\n';
     data.images.items.forEach(image => {
-      csvContent += `\"${image.src}\",\"${(image.alt || 'Missing Alt Text').replace(/"/g, '""')}\"\n`;
+      const status = image.hasAlt ? 'OK' : 'MISSING ALT';
+      csvContent += `${status},${escape(image.alt)},${escape(image.src)}\n`;
     });
     csvContent += '\n';
 
-    // Open Graph
-    csvContent += 'SOCIAL MEDIA - OPEN GRAPH META TAGS\n';
-    csvContent += 'OG Property,Content Value\n';
+    // --- SECTION 5: LINK ANALYSIS ---
+    csvContent += '### LINK ANALYSIS ###\n';
+    csvContent += 'Type,Follow,Anchor Text,Destination URL\n';
+    data.links.items.forEach(link => {
+      csvContent += `${link.isInternal ? 'Internal' : 'External'},${link.isNofollow ? 'NoFollow' : 'DoFollow'},${escape(link.anchor)},${escape(link.url)}\n`;
+    });
+    csvContent += '\n';
+
+    // --- SECTION 6: SOCIAL TAGS ---
+    csvContent += '### SOCIAL TAGS (OG & TWITTER) ###\n';
+    csvContent += 'Platform,Property,Value\n';
     for (const [key, value] of Object.entries(data.ogData)) {
-      csvContent += `\"${key}\",\"${value.replace(/"/g, '""')}\"\n`;
+      csvContent += `Open Graph,${escape(key)},${escape(value)}\n`;
     }
-    csvContent += '\n';
-
-    // Twitter Cards
-    csvContent += 'SOCIAL MEDIA - TWITTER CARD META TAGS\n';
-    csvContent += 'Twitter Property,Content Value\n';
     for (const [key, value] of Object.entries(data.twitterData)) {
-      csvContent += `\"${key}\",\"${value.replace(/"/g, '""')}\"\n`;
+      csvContent += `Twitter,${escape(key)},${escape(value)}\n`;
     }
     csvContent += '\n';
 
-    // Schema
-    csvContent += 'STRUCTURED DATA - SCHEMA.ORG MARKUP\n';
-    csvContent += 'Schema Type,Schema Data\n';
+     // --- SECTION 7: SCHEMA MARKUP ---
+    csvContent += '### SCHEMA MARKUP ###\n';
+    csvContent += 'Type,Raw JSON\n';
     data.schema.forEach(schema => {
-      csvContent += `\"${schema.type}${schema.itemType ? ' - ' + schema.itemType : ''}\",\"${JSON.stringify(schema.data).replace(/"/g, '""')}\"\n`;
+      const type = schema.itemType || (schema.data && schema.data['@type']) || schema.type;
+      csvContent += `${escape(type)},${escape(JSON.stringify(schema.data))}\n`;
     });
     csvContent += '\n';
 
-    // Hreflang
-    csvContent += 'INTERNATIONAL - HREFLANG TAG IMPLEMENTATION\n';
-    csvContent += 'Target Language/Region,Localized URL\n';
+    // --- SECTION 8: HREFLANG TAGS ---
+    csvContent += '### HREFLANG TAGS ###\n';
+    csvContent += 'Language,URL\n';
     data.hreflang.forEach(tag => {
-      csvContent += `\"${tag.lang}\",\"${tag.href}\"\n`;
+        csvContent += `${escape(tag.lang)},${escape(tag.href)}\n`;
     });
 
     // Create and trigger download
@@ -1687,7 +1997,7 @@ function exportAllSeoData() {
     const link = document.createElement('a');
     link.setAttribute('href', url);
     const date = new Date().toISOString().split('T')[0];
-    link.setAttribute('download', `seo_analysis_${pageName}_${date}.csv`);
+    link.setAttribute('download', `SEO_AUDIT_${pageName}_${date}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1948,10 +2258,13 @@ function copyMetaInfo() {
   const data = window.pageData;
   
   let metaText = 'SEO META INFORMATION\n\n';
-  metaText += `Title: ${data.title}\n`;
-  metaText += `Title Length: ${data.title.length} characters\n\n`;
-  metaText += `Description: ${data.description || 'Missing'}\n`;
-  metaText += `Description Length: ${data.description ? data.description.length : 0} characters\n\n`;
+  if (data.ogData && data.ogData.site_name) {
+    metaText += `Site Title: ${data.ogData.site_name}\n`;
+  }
+  metaText += `Meta Title: ${data.title}\n`;
+  metaText += `Meta Title Length: ${data.title.length} characters\n\n`;
+  metaText += `Meta Description: ${data.description || 'Missing'}\n`;
+  metaText += `Meta Description Length: ${data.description ? data.description.length : 0} characters\n\n`;
   metaText += `URL: ${data.url}\n`;
   metaText += `Canonical URL: ${data.canonical || 'Missing'}\n`;
   metaText += `Robots Directive: ${data.robots || 'Missing'}\n`;
@@ -2139,6 +2452,75 @@ function visualizeMissingAlt() {
         });
         
         return `Found ${count} images without ALT text`;
+      }
+    });
+  });
+}
+
+function visualizeAltText() {
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    chrome.scripting.insertCSS({
+      target: {tabId: tabs[0].id},
+      css: `
+        .backlinkz-overlay-alt-text {
+          outline: 3px solid #339af0 !important;
+          position: relative !important;
+        }
+        .backlinkz-overlay-alt-text-label {
+          position: absolute;
+          background: #339af0;
+          color: white;
+          padding: 4px 8px;
+          font-size: 12px;
+          font-weight: bold;
+          z-index: 10000;
+          border-radius: 4px;
+          pointer-events: none;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          max-width: 300px;
+          word-wrap: break-word;
+        }
+      `
+    });
+    
+    chrome.scripting.executeScript({
+      target: {tabId: tabs[0].id},
+      function: function() {
+        const existing = document.querySelectorAll('.backlinkz-overlay-alt-text');
+        if (existing.length > 0) {
+          existing.forEach(el => el.classList.remove('backlinkz-overlay-alt-text'));
+          document.querySelectorAll('.backlinkz-overlay-alt-text-label').forEach(el => el.remove());
+          return 'Visualizations removed';
+        }
+        
+        const images = document.querySelectorAll('img');
+        let count = 0;
+        
+        images.forEach(img => {
+          const alt = img.getAttribute('alt');
+          img.classList.add('backlinkz-overlay-alt-text');
+          
+          // Create a floating label
+          const label = document.createElement('div');
+          label.className = 'backlinkz-overlay-alt-text-label';
+          
+          if (alt && alt.trim() !== '') {
+            label.textContent = 'ALT: ' + alt;
+          } else {
+            label.textContent = 'MISSING ALT';
+            label.style.backgroundColor = '#ff6b6b'; // Use warning color for missing alt
+          }
+          
+          // Position logic
+          const rect = img.getBoundingClientRect();
+          label.style.top = (rect.top + window.scrollY) + 'px';
+          label.style.left = (rect.left + window.scrollX) + 'px';
+          document.body.appendChild(label);
+          
+          count++;
+        });
+        
+        return `Showed alt text for ${count} images`;
       }
     });
   });
